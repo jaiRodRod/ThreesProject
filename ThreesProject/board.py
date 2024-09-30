@@ -239,3 +239,6 @@ class Board:
         elif value == 4:
             ficha = 3
         return ficha
+
+    def obtenerEstado(self):
+        return self.board

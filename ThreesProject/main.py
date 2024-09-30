@@ -2,6 +2,7 @@ import pygame
 
 import const
 import board as bd
+import ai
 
 #Lanza el proyecto
 pygame.init()
@@ -76,7 +77,6 @@ def draw_screen_end(puntuacion):
     text_rect02 = text02.get_rect(center=(600, 400))
     screen.blit(text01, text_rect01)
     screen.blit(text02, text_rect02)
-
 
 #Hacemos el bucle que refresca la ventana
 running = True
