@@ -40,6 +40,7 @@ class Board:
                     randomInitInt = np.random.randint(0,10)
                     self.board[i,j] = self.generarFicha(randomInitInt)
             self.siguienteFicha = self.randomSiguienteFicha()
+        
 
     def calcularPuntuacion(self):
         """
@@ -77,10 +78,16 @@ class Board:
         union = False
         for i in range(0,3):
             for j in range(0,3):
-                if ((self.board[i,j] > 3 and (self.board[i,j] == self.board[i+1,j] or self.board[i,j] == self.board[i,j+1]))
-                or ((self.board[i,j] == 1 and self.board[i,j+1] == 2) or (self.board[i,j] == 2 and self.board[i,j+1] == 1) or
-                    (self.board[i,j] == 1 and self.board[i+1,j] == 2) or (self.board[i,j] == 2 and self.board[i+1,j] == 1))):
+                if ((self.board[i,j] >= 3 and (self.board[i,j] == self.board[i+1,j] or self.board[i,j] == self.board[i,j+1]))
+                or ((self.board[i,j] == 1 and self.board[i,j+1] == 2) or (self.board[i,j] == 2 and self.board[i,j+1] == 1) 
+                or (self.board[i,j] == 1 and self.board[i+1,j] == 2) or (self.board[i,j] == 2 and self.board[i+1,j] == 1)
+                
+                or (self.board[3,j] == 1 and self.board[3,j+1]==2) or (self.board[3,j] == 2 and self.board[3,j+1]==1)
+                or (self.board[i,3] == 1 and self.board[i+1,3]==2) or (self.board[i,3] == 2 and self.board[i+1,3]==1)
+                or (self.board[3,j] >= 3 and (self.board[3,j+1] == self.board[3,j]))
+                or (self.board[i,3] >= 3 and (self.board[i+1,3] == self.board[i,3])))):
                     union = True
+                
         return union
 
     def partidaPerdida(self):
@@ -103,6 +110,7 @@ class Board:
         :param direccionMovimiento: Se trata de la direccion en la que se
         moverá el tablero
         """
+        moved = False
         if direccionMovimiento == const.Movimiento.IZQUIERDA:
             for i in range(0,4):
                 for j in range(0,4):
@@ -111,55 +119,76 @@ class Board:
                     if j == 0 and ((self.board[i,j] == self.board[i,j+1] and self.board[i,j] >= 3) or (self.board[i,j] == 1 and self.board[i,j+1] == 2) or (self.board[i,j] == 2 and self.board[i,j+1] == 1)):
                         self.board[i,j] = self.board[i,j] + self.board[i,j+1]
                         self.board[i,j+1] = 0
+                        moved = True
                     # Caso en el que una ficha se mueva a un hueco vacio
                     elif j > 0 and self.board[i,j-1] == 0:
-                        self.board[i,j-1] = self.board[i,j]
-                        self.board[i,j] = 0
+                        if (self.board[i,j] != 0):
+                            moved = True
+                            self.board[i,j-1] = self.board[i,j]
+                            self.board[i,j] = 0
                     # Caso en el que una ficha se encuentre otra
                     # a la izquierda y pueda unirse con la de la derecha
                     elif j > 0 and j < 3 and ((self.board[i,j] == self.board[i,j+1] and self.board[i,j-1] != self.board[i,j] and self.board[i,j] >= 3) or (self.board[i,j] == 1 and self.board[i,j+1] == 2) or (self.board[i,j] == 2 and self.board[i,j+1] == 1)):
                         self.board[i,j] = self.board[i,j] + self.board[i,j+1]
                         self.board[i,j+1] = 0
-            self.desplegarFicha(const.Movimiento.IZQUIERDA,self.siguienteFicha)
+                        moved = True
+            if (moved):
+                self.desplegarFicha(const.Movimiento.IZQUIERDA,self.siguienteFicha)
         if direccionMovimiento == const.Movimiento.DERECHA:
+            
             for i in range(0,4):
                 for j in reversed(range(0,4)):
                     if j == 3 and ((self.board[i,j] == self.board[i,j-1] and self.board[i,j] >= 3) or (self.board[i,j] == 1 and self.board[i,j-1] == 2) or (self.board[i,j] == 2 and self.board[i,j-1] == 1)):
                         self.board[i,j] = self.board[i,j] + self.board[i,j-1]
                         self.board[i,j-1] = 0
+                        moved = True
                     elif j < 3 and self.board[i,j+1] == 0:
-                        self.board[i,j+1] = self.board[i,j]
-                        self.board[i,j] = 0
+                        if (self.board[i,j] != 0):
+                            moved = True
+                            self.board[i,j+1] = self.board[i,j]
+                            self.board[i,j] = 0
                     elif j > 0 and j < 3 and ((self.board[i,j] == self.board[i,j-1] and self.board[i,j+1] != self.board[i,j] and self.board[i,j] >= 3) or (self.board[i,j] == 1 and self.board[i,j-1] == 2) or (self.board[i,j] == 2 and self.board[i,j-1] == 1)):
                         self.board[i,j] = self.board[i,j] + self.board[i,j-1]
                         self.board[i,j-1] = 0
-            self.desplegarFicha(const.Movimiento.DERECHA,self.siguienteFicha)
+                        moved = True
+            if (moved):
+                self.desplegarFicha(const.Movimiento.DERECHA,self.siguienteFicha)
         if direccionMovimiento == const.Movimiento.ARRIBA:
             for i in range(0,4):
                 for j in range(0,4):
                     if j == 0 and ((self.board[j,i] == self.board[j+1,i] and self.board[j,i] >= 3) or (self.board[j,i] == 1 and self.board[j+1,i] == 2) or (self.board[j,i] == 2 and self.board[j+1,i] == 1)):
                         self.board[j,i] = self.board[j,i] + self.board[j+1,i]
                         self.board[j+1,i] = 0
+                        moved = True
                     elif j > 0 and self.board[j-1,i] == 0:
-                        self.board[j-1,i] = self.board[j,i]
-                        self.board[j,i] = 0
+                        if (self.board[j,i] != 0):
+                            moved = True
+                            self.board[j-1,i] = self.board[j,i]
+                            self.board[j,i] = 0
                     elif j > 0 and j < 3 and ((self.board[j,i] == self.board[j+1,i] and self.board[j-1,i] != self.board[j,i] and self.board[j,i] >= 3) or (self.board[j,i] == 1 and self.board[j+1,i] == 2) or (self.board[j,i] == 2 and self.board[j+1,i] == 1)):
                         self.board[j,i] = self.board[j,i] + self.board[j+1,i]
                         self.board[j+1,i] = 0
-            self.desplegarFicha(const.Movimiento.ARRIBA,self.siguienteFicha)
+                        moved = True
+            if (moved):
+                self.desplegarFicha(const.Movimiento.ARRIBA,self.siguienteFicha)
         if direccionMovimiento == const.Movimiento.ABAJO:
             for i in range(0,4):
                 for j in reversed(range(0,4)):
                     if j == 3 and ((self.board[j,i] == self.board[j-1,i] and self.board[j,i] >= 3) or (self.board[j,i] == 1 and self.board[j-1,i] == 2) or (self.board[j,i] == 2 and self.board[j-1,i] == 1)):
                         self.board[j,i] = self.board[j,i] + self.board[j-1,i]
                         self.board[j-1,i] = 0
+                        moved = True
                     elif j < 3 and self.board[j+1,i] == 0:
-                        self.board[j+1,i] = self.board[j,i]
-                        self.board[j,i] = 0
+                        if (self.board[j,i] != 0):
+                            moved = True
+                            self.board[j+1,i] = self.board[j,i]
+                            self.board[j,i] = 0
                     elif j > 0 and j < 3 and ((self.board[j,i] == self.board[j-1,i] and self.board[j+1,i] != self.board[j,i] and self.board[j,i] >= 3) or (self.board[j,i] == 1 and self.board[j-1,i] == 2) or (self.board[j,i] == 2 and self.board[j-1,i] == 1)):
                         self.board[j,i] = self.board[j,i] + self.board[j-1,i]
                         self.board[j-1,i] = 0
-            self.desplegarFicha(const.Movimiento.ABAJO,self.siguienteFicha)
+                        moved = True
+            if (moved): 
+                self.desplegarFicha(const.Movimiento.ABAJO,self.siguienteFicha)
 
     def desplegarFicha(self,direccionUltimoMovimiento,siguienteFicha):
         """

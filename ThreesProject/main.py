@@ -17,6 +17,9 @@ board = bd.Board()
 #seed_array = [0,0,0,3,0,0,2,0,0,1,0,0,3,0,0,0,10340203,45849032]
 #board = bd.Board(seed_array)
 
+#seed_array = [1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,10340203,45849032]
+#board = bd.Board(seed_array)
+
 def draw_screen():
     screen.fill(const.WHITE)
     font = pygame.font.SysFont(None, 50)
