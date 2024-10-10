@@ -40,6 +40,20 @@ class Board:
                     randomInitInt = np.random.randint(0,10)
                     self.board[i,j] = self.generarFicha(randomInitInt)
             self.siguienteFicha = self.randomSiguienteFicha()
+
+    def copy(self, boardToCopy):
+        """
+        Esta funcion sirve para copiar el estado de un board.
+
+        :param boardToCopy: Instancia de la clase board con los datos a copiar
+        :return: Copia al board actual el boardToCopy
+        """
+        self.board = boardToCopy.board
+        self.siguienteFicha = boardToCopy.siguienteFicha
+        rnFichaState = boardToCopy.randomNextFicha.get_state()
+        self.randomNextFicha.__setstate__(rnFichaState)
+        rnPositionState = boardToCopy.randomNextPosition.get_state()
+        self.randomNextPosition.__setstate__(rnPositionState)
         
 
     def calcularPuntuacion(self):
