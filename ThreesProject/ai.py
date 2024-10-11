@@ -8,10 +8,11 @@ import board as bd
 
 # Creamos un nodo con la estructura de Node pero con los atributos personalizados board, valor_F
 class MiNodo(Node):
-    def __init__(self, name, board, padre):
+    def __init__(self, name, board, padre, movimiento):
         super().__init__(name, padre)
         self.board = board
         self.valor_F = self.depth # El coste de la función para lo que llevo hasta ahora corresponde con la profundidad...
+        self.movimiento = movimiento # Guardamos que movimiento desde el padre ha llevado a este estado
 
 # En este problema carecemos de estado objetivo, se juega hasta que la lista de abiertos esté vacia y luego nos quedamos con el mejor resultado
 class Ai:
@@ -24,7 +25,7 @@ class Ai:
         # Estado inicial
         self.estadoInicial = board
         # Guardamos la raíz árbol de búsqueda
-        self.raiz = MiNodo(board.__hash__(), board=board,padre=None)
+        self.raiz = MiNodo(board.__hash__(), board=board,padre=None, movimiento=None)
         # Guardamos el nodo ganador, inicialmente raíz
         self.nodo_ganador = self.raiz
 
@@ -62,7 +63,7 @@ class Ai:
             #Si la regla ha sido aplicable y obtenemos tableros que no estén en cerrados ni abiertos (nodo nuevo)
             if nuevoTablero is not None and self.esNuevo(nuevoTablero):
                     # Añadimos información al arbol creando un nodoHijo y poniendo el puntero al nodo padre
-                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre)
+                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i])
 
                     # Mantenemos actualizado el estado con mejor puntuación
                     if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nuevoTablero):
@@ -95,6 +96,7 @@ class Ai:
         print("\nPath ganador:")
         for estado in self.encontrar_path(self.nodo_ganador):
             print(estado)
+            print("\n")
 
     # Búsqueda en amplitud, tiene el parámetro opcional max_steps para regular el número de expansiones permitidos en la exploracion, si no acotamos, tardará mucho...
     def BFS(self,max_steps=100):
@@ -140,8 +142,8 @@ board = bd.Board()
 ai = Ai(board)
 
 print("Estado inicial:")
-print(board)
+print(ai.estadoInicial)
 
-ai.BFS()
+ai.BFS(2)
 #ai.DFS()
 ai.mostrar_arbol()
