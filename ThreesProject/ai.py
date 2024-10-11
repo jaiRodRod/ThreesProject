@@ -1,98 +1,147 @@
-import pandas as pd
-import numpy as np
 import const
-
-#https://builtin.com/articles/tree-python (referencias para el árbol)
-from bigtree import dataframe_to_tree
+from anytree import Node, RenderTree
+from anytree.exporter import DotExporter
 
 reglasProducción = [const.Movimiento.ABAJO,const.Movimiento.ARRIBA,const.Movimiento.DERECHA,const.Movimiento.IZQUIERDA]
 
 import board as bd
 
+# Creamos un nodo con la estructura de Node pero con los atributos personalizados board, valor_F
+class MiNodo(Node):
+    def __init__(self, name, board, padre):
+        super().__init__(name, padre)
+        self.board = board
+        self.valor_F = self.depth # El coste de la función para lo que llevo hasta ahora corresponde con la profundidad...
 
 # En este problema carecemos de estado objetivo, se juega hasta que la lista de abiertos esté vacia y luego nos quedamos con el mejor resultado
 class Ai:
 
     def __init__(self,board):
-        #Lista abiertos
+        # Lista abiertos
         self.abiertos = []
-        #Lista cerrados
+        # Lista cerrados
         self.cerrados = []
-        #Guardamos el tablero
+        # Estado inicial
         self.estadoInicial = board
-        #Guardamos el estado ganador inicialmente s
-        self.estadoGanador = self.estadoInicial
-        #Guardamos el árbol de búsqueda
-        self.path_data = pd.DataFrame(
-            [
-                ["1",self.estadoInicial,0,None]
-            ],
-            columns=["PATH","Estado","Valor_F","Puntero"],
-        )
+        # Guardamos la raíz árbol de búsqueda
+        self.raiz = MiNodo(board.__hash__(), board=board,padre=None)
+        # Guardamos el nodo ganador, inicialmente raíz
+        self.nodo_ganador = self.raiz
 
-    # Buscar en el DataFrame (árbol) la fila que tenga un estado igual a n y devuelvo el path
-    def encontrar_path(self, n):
-        for index, row in self.path_data.iterrows():
-            estado_actual = row['Estado']
-            # Usamos np.array_equal si los estados son arrays o estructuras similares
-            if np.array_equal(estado_actual, n):
-                return row['PATH']  # Devolver el valor de la columna PATH correspondiente a ese estado
-        return None  # Si no se encuentra el estado
+        self.cont = 0
 
-    # Devuelve una lista de nodos tras la expansion de un nodo
-    def calcularAbiertos(self,n,orden):
+    # Se usa esta función para obtener el camino del nodo objetivo a la raíz
+    def encontrar_path(self, nodo):
+        path = []
+        while nodo is not None:
+            path.append(nodo.board)  # Guardamos el tablero en el camino
+            nodo = nodo.parent  # Movemos al padre
+        return path[::-1]  # Invertimos el camino
+
+    # Dibuja el arbol y lo exporta en formato .dot
+    def mostrar_arbol(self):
+        for pre, fill, node in RenderTree(self.raiz):
+            print(f"{pre}{node.name} (Puntuación: {node.board.calcularPuntuacion()})")
+        # Exportamos el árbol a un formato gráfico (graphviz)
+        DotExporter(self.raiz).to_dotfile("arbol_busqueda.dot")
+
+    # Añade a abiertos los nodos resultantes de la expansión del nodo "nodo_padre"
+    def calcularAbiertos(self,nodo_padre):
         for i in range (len(reglasProducción)):
-            n2 = n.moverTablero(n,reglasProducción[i]).obtenerEstado()
-            # Obtenemos nodos n2 que no estén en cerrados ni abiertos
-            if not any(np.array_equal(n2, cerrado) for cerrado in self.cerrados) and not any(np.array_equal(n2, abierto) for abierto in self.abiertos):
-                orden += 1
-                # Mantenemos actualizado el estado con mejor puntuación
-                if bd.calcularPuntuacion(self.estadoGanador) < bd.calcularPuntuacion(n2):
-                    self.estadoGanador = n2
-                # Guardamos n2 en abiertos
-                self.abiertos.append(n2)
-                # Añadimos información al path_data poniendo el puntero al nodo anterior (n)
-                # Primero recuperamosel path anterior
-                path_anterior = self.encontrar_path(n)
-                nueva_fila = pd.DataFrame(
-                    [[ path_anterior +"/" + str(orden), n2, 0, n]],
-                    columns=["PATH", "Estado", "A", "Puntero"]
-                )
-                self.path_data = pd.concat([self.path_data, nueva_fila], ignore_index=True)
-        return orden
+            # Obtenemos el tablero del nodo padre
+            padre = nodo_padre.board
+            # Creamos un tablero nuevo para evitar usar la misma referencia y alterar el nodo padre
+            nuevoTablero = bd.Board()
 
-    #Búsquedda en amplitud
-    def BFS(self):
-        orden = 1
-        # Calculamos nodos abiertos en s
-        orden = self.calcularAbiertos(self.estadoInicial,orden)
-        # La lista de nodos cerrados se inicializa a vacia
-        while len(self.abiertos)>0:
-            # Sacamos el nodo n de abiertos, al sacar el primero estamos sacando el de mayor antigüedad
+            # Copiamos el tablero del padre al nuevo tablero
+            nuevoTablero.copy(padre)
+
+            #Movemos el nuevo tablero según la regla de producción correspondiente
+            nuevoTablero.moverTablero(reglasProducción[i])
+
+            #Si la regla ha sido aplicable y obtenemos tableros que no estén en cerrados ni abiertos (nodo nuevo)
+            if nuevoTablero is not None and self.esNuevo(nuevoTablero):
+                    # Añadimos información al arbol creando un nodoHijo y poniendo el puntero al nodo padre
+                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre)
+
+                    # Mantenemos actualizado el estado con mejor puntuación
+                    if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nuevoTablero):
+                        self.nodo_ganador = nodoHijo
+
+                    #Añadimos el nodo a abiertos
+                    self.abiertos.append(nodoHijo)
+
+    # Comprueba usando equals si el nuevo tablero se encuentra en cerrados
+    def estaEnCerrados(self, tablero):
+        for cerrado in self.cerrados:
+            if tablero.__eq__(cerrado.board):
+                return True
+        return False
+
+    # Comprueba usando equals si el nuevo tablero se encuentra en abiertos
+    def estaEnAbiertos(self, tablero):
+        for abierto in self.abiertos:
+            if tablero.__eq__(abierto.board):
+                return True
+        return False
+
+    # Nos dice si un tablero es nuevo en el árbol de exploración
+    def esNuevo(self,tablero):
+        return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
+
+    def mostrarResultado(self):
+        # Mostramos resultados obtenidos
+        print("\nEstado ganador:\n", self.nodo_ganador.board.board)
+        print("\nPath ganador:")
+        for estado in self.encontrar_path(self.nodo_ganador):
+            print(estado)
+
+    # Búsqueda en amplitud, tiene el parámetro opcional max_steps para regular el número de expansiones permitidos en la exploracion, si no acotamos, tardará mucho...
+    def BFS(self,max_steps=100):
+        # Calculamos nodos abiertos en la raíz
+        self.calcularAbiertos(self.raiz)
+        # La lista de nodos cerrados se inicializa a vacia en el propio constructor
+        step = 1
+        while step<=max_steps:
+            # Sacamos el nodo n de abiertos, al sacar el primero estamos sacando el de mayor antigüedad (Amplitud)
             n = self.abiertos.pop(0)
-            # Añadimos n a Cerrados
+            # Añadimos nodo n a Cerrados
             self.cerrados.append(n)
-            # Expandimos n obteniendo M
-            orden = self.calcularAbiertos(n,orden)
+            # Expandimos n obteniendo nuevos nodos en abiertos
+            self.calcularAbiertos(n)
 
-        # Al finalizar, estadoGanador contiene el estado con la mejor puntuación
-        print("Estado ganador:", self.estadoGanador)
-        print("Path ganador:", self.encontrar_path(self.estadoGanador))
+            #Avanzamos un paso de expansion
+            step += 1
 
-    #Búsqueda en profuncidad
-    def DFS(self):
-        orden = 1
-        # Calculamos nodos abiertos en s
-        orden = self.calcularAbiertos(self.estadoInicial, orden)
-        # La lista de nodos cerrados se inicializa a vacia
-        while len(self.abiertos) > 0:
-            # Sacamos el nodo n de abiertos, al sacar el último estamos sacando el más nuevo
+        # Mostramos resultados obtenidos
+        self.mostrarResultado()
+
+    # Búsquedda en profundidad, tiene el parámetro opcional max_steps para regular el número de expansiones permitidos en la exploracion, si no acotamos, tardará mucho...
+    def DFS(self,max_steps=100):
+        # Calculamos nodos abiertos en la raíz
+        self.calcularAbiertos(self.raiz)
+        # La lista de nodos cerrados se inicializa a vacia en el propio constructor
+        step = 1
+        while step <= max_steps:
+            # Sacamos el nodo n de abiertos, al sacar el último estamos sacando el de menor antigüedad
             n = self.abiertos.pop()
-            # Añadimos n a Cerrados
+            # Añadimos nodo n a Cerrados
             self.cerrados.append(n)
-            # Expandimos n obteniendo M
-            orden = self.calcularAbiertos(n, orden)
+            # Expandimos n obteniendo nuevos nodos en abiertos
+            self.calcularAbiertos(n)
 
-        # Al finalizar, estadoGanador contiene el estado con la mejor puntuación
-        print("Estado ganador:", self.estadoGanador)
-        print("Path ganador:", self.encontrar_path(self.estadoGanador))
+            #Avanzamos un paso de expansion
+            step += 1
+
+        # Mostramos resultados obtenidos
+        self.mostrarResultado()
+
+board = bd.Board()
+ai = Ai(board)
+
+print("Estado inicial:")
+print(board)
+
+ai.BFS()
+#ai.DFS()
+ai.mostrar_arbol()

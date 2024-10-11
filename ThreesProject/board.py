@@ -1,5 +1,5 @@
 import numpy as np
-
+import copy
 import const
 
 
@@ -43,18 +43,24 @@ class Board:
 
     def copy(self, boardToCopy):
         """
-        Esta funcion sirve para copiar el estado de un board.
+        Esta función sirve para copiar el estado de un board.
 
         :param boardToCopy: Instancia de la clase board con los datos a copiar
         :return: Copia al board actual el boardToCopy
         """
-        self.board = boardToCopy.board
-        self.siguienteFicha = boardToCopy.siguienteFicha
-        rnFichaState = boardToCopy.randomNextFicha.get_state()
-        self.randomNextFicha.__setstate__(rnFichaState)
-        rnPositionState = boardToCopy.randomNextPosition.get_state()
-        self.randomNextPosition.__setstate__(rnPositionState)
-        
+        # Realizamos copias profundas para asegurarnos de que no haya referencias compartidas
+        self.board = copy.deepcopy(boardToCopy.board)
+        self.siguienteFicha = copy.deepcopy(boardToCopy.siguienteFicha)
+
+        # Si randomNextFicha y randomNextPosition son objetos complejos
+        self.randomNextFicha = copy.deepcopy(boardToCopy.randomNextFicha)
+        self.randomNextPosition = copy.deepcopy(boardToCopy.randomNextPosition)
+
+        # Copiar el estado del generador de la ficha
+        self.randomNextFicha.bit_generator.state = copy.deepcopy(boardToCopy.randomNextFicha.bit_generator.state)
+
+        # Copiar el estado del generador de la posición
+        self.randomNextPosition.bit_generator.state = copy.deepcopy(boardToCopy.randomNextPosition.bit_generator.state)
 
     def calcularPuntuacion(self):
         """
@@ -285,3 +291,18 @@ class Board:
 
     def obtenerEstado(self):
         return self.board
+
+    def __str__(self):
+        # Devuelve el estado del tablero como una cadena
+        return "\n".join(" ".join(str(int(cell)) for cell in row) for row in self.board)
+
+    def __hash__(self):
+        # Generate a hash based only on hashable attributes
+        return hash((self.board.tobytes(), self.siguienteFicha))
+
+    def __eq__(self, other):
+        if not isinstance(other, Board):
+            return False
+        return (np.array_equal(self.board, other.board) and
+                self.siguienteFicha == other.siguienteFicha)
+

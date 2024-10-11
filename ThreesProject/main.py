@@ -2,7 +2,6 @@ import pygame
 
 import const
 import board as bd
-import ai
 
 #Lanza el proyecto
 pygame.init()
