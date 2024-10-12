@@ -72,11 +72,24 @@ class Board:
         :return: Booleano que es False si no hay huecos
         y True si quedan huecos
         """
-        huecos = False
+        hay_huecos = False
         for i in range(0,4):
             for j in range(0,4):
                 if self.board[i,j] == 0:
-                    huecos = True
+                    hay_huecos = True
+        return hay_huecos
+    
+    def huecos(self):
+        """
+        Esta función te devuelve el número de 
+        huecos que tiene el tablero
+        :return: Valor en int del número de huecos
+        """
+        huecos = 0
+        for i in range(0,4):
+            for j in range(0,4):
+                if self.board[i,j] == 0:
+                    huecos += 1
         return huecos
 
     def unionDisponible(self):

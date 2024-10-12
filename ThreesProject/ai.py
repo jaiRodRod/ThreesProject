@@ -23,7 +23,7 @@ class MiNodo(Node):
 # En este problema carecemos de estado objetivo, se juega hasta que la lista de abiertos esté vacia y luego nos quedamos con el mejor resultado
 class Ai:
 
-    def __init__(self,board):
+    def __init__(self, board, funcion_heuristica=lambda x: 0):
         # Lista abiertos
         self.abiertos = []
         # Lista cerrados
@@ -31,9 +31,11 @@ class Ai:
         # Estado inicial
         self.estadoInicial = board
         # Guardamos la raíz árbol de búsqueda
-        self.raiz = MiNodo(board.__hash__(), board=board, padre=None, movimiento=None, valor_heuristico=0)
+        self.raiz = MiNodo(board.__hash__(), board=board, padre=None, movimiento=None, valor_heuristico=funcion_heuristica(self.estadoInicial))
         # Guardamos el nodo ganador, inicialmente raíz
         self.nodo_ganador = self.raiz
+        # Guardamos la función heurística que se utilizará si se usa un algoritmo con ella
+        self.funcion_heuristica = funcion_heuristica
 
         self.cont = 0
 
@@ -53,7 +55,7 @@ class Ai:
         DotExporter(self.raiz).to_dotfile("arbol_busqueda.dot")
 
     # Añade a abiertos los nodos resultantes de la expansión del nodo "nodo_padre"
-    def calcularAbiertos(self, nodo_padre, funcion_heuristica=lambda x: 0):
+    def calcularAbiertos(self, nodo_padre):
         for i in range (len(reglasProducción)):
             # Obtenemos el tablero del nodo padre
             padre = nodo_padre.board
@@ -67,8 +69,11 @@ class Ai:
 
             #Si la regla ha sido aplicable y obtenemos tableros que no estén en cerrados ni abiertos (nodo nuevo)
             if nuevoTablero is not None and self.esNuevo(nuevoTablero):
+                    # Calculamos el heurístico
+                    resultado_heuristico = self.funcion_heuristica(nuevoTablero);
+                
                     # Añadimos información al arbol creando un nodoHijo y poniendo el puntero al nodo padre
-                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i]) # AQUÍ FALTA ASIGNAR VALOR HEURÍSTICO
+                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i], valor_heuristico=resultado_heuristico)
 
                     # Mantenemos actualizado el estado con mejor puntuación
                     if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nuevoTablero):
@@ -171,10 +176,10 @@ class Ai:
         # Mostramos resultados obtenidos
         self.mostrarResultado()
         
-    # Algoritmo A*, función heuristica por defecto h(n) = 0
-    def AStar(self, max_steps=100, funcion_heuristica=lambda x: 0):
+    # Algoritmo A*
+    def AStar(self, max_steps=100):
         # Calculamos nodos abiertos en la raíz
-        self.calcularAbiertos(self.raiz, funcion_heuristica=funcion_heuristica)
+        self.calcularAbiertos(self.raiz)
         # La lista de nodos cerrados se inicializa a vacia en el propio constructor
         step = 1
         
@@ -186,28 +191,33 @@ class Ai:
             # Añadimos nodo n a Cerrados
             self.cerrados.append(n)
             # Expandimos n obteniendo nuevos nodos en abiertos
-            self.calcularAbiertos(n, funcion_heuristica=funcion_heuristica)
+            self.calcularAbiertos(n)
 
             #Avanzamos un paso de expansion
             step += 1
         
         # Mostramos resultados obtenidos
         self.mostrarResultado()
+        
+        
+def FuncionHeuristica_CasillasVacias(board):
+    return board.huecos();
 
 board = bd.Board()
-ai = Ai(board)
+ai = Ai(board, funcion_heuristica=FuncionHeuristica_CasillasVacias)
 
 print("Estado inicial:")
 print(ai.estadoInicial)
 
-ai.BFS()
+#ai.BFS()
 #ai.DFS()
-#ai.AStar()
+ai.AStar()
 ai.mostrar_arbol()
 
-print("A*")
-ai2 = Ai(board)
-print("Estado inicial:")
-print(ai2.estadoInicial)
-ai2.AStar()
-ai2.mostrar_arbol()
+
+# print("A*")
+# ai2 = Ai(board)
+# print("Estado inicial:")
+# print(ai2.estadoInicial)
+# ai2.AStar()
+# ai2.mostrar_arbol()
