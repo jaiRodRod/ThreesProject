@@ -52,10 +52,9 @@ class Ai:
             # Obtenemos el tablero del nodo padre
             padre = nodo_padre.board
             # Creamos un tablero nuevo para evitar usar la misma referencia y alterar el nodo padre
-            nuevoTablero = bd.Board()
+            nuevoTablero = bd.Board.__copy__(padre)
 
             # Copiamos el tablero del padre al nuevo tablero
-            nuevoTablero.copy(padre)
 
             #Movemos el nuevo tablero según la regla de producción correspondiente
             nuevoTablero.moverTablero(reglasProducción[i])
@@ -94,7 +93,8 @@ class Ai:
         # Mostramos resultados obtenidos
         print("\nEstado ganador:\n", self.nodo_ganador.board.board)
         print("\nPath ganador:")
-        for estado in self.encontrar_path(self.nodo_ganador):
+        path = self.encontrar_path(self.nodo_ganador)
+        for estado in path:
             print(estado)
             print("\n")
 
@@ -144,6 +144,6 @@ ai = Ai(board)
 print("Estado inicial:")
 print(ai.estadoInicial)
 
-ai.BFS(2)
+ai.BFS()
 #ai.DFS()
 ai.mostrar_arbol()

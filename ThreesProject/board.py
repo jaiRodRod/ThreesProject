@@ -41,26 +41,17 @@ class Board:
                     self.board[i,j] = self.generarFicha(randomInitInt)
             self.siguienteFicha = self.randomSiguienteFicha()
 
-    def copy(self, boardToCopy):
-        """
-        Esta función sirve para copiar el estado de un board.
+    def __copy__(self):
+        # Creamos una nueva instancia sin pasar por el constructor
+        newone = Board.__new__(Board)
 
-        :param boardToCopy: Instancia de la clase board con los datos a copiar
-        :return: Copia al board actual el boardToCopy
-        """
-        # Realizamos copias profundas para asegurarnos de que no haya referencias compartidas
-        self.board = copy.deepcopy(boardToCopy.board)
-        self.siguienteFicha = copy.deepcopy(boardToCopy.siguienteFicha)
+        # Copiamos los atributos manualmente para evitar la modificación del estado original
+        newone.board = copy.deepcopy(self.board)  # Copia profunda del tablero
+        newone.siguienteFicha = self.siguienteFicha  # Copia directa del valor
+        newone.randomNextFicha = copy.deepcopy(self.randomNextFicha)  # Copia profunda del generador de fichas
+        newone.randomNextPosition = copy.deepcopy(self.randomNextPosition)  # Copia profunda del generador de posiciones
 
-        # Si randomNextFicha y randomNextPosition son objetos complejos
-        self.randomNextFicha = copy.deepcopy(boardToCopy.randomNextFicha)
-        self.randomNextPosition = copy.deepcopy(boardToCopy.randomNextPosition)
-
-        # Copiar el estado del generador de la ficha
-        self.randomNextFicha.bit_generator.state = copy.deepcopy(boardToCopy.randomNextFicha.bit_generator.state)
-
-        # Copiar el estado del generador de la posición
-        self.randomNextPosition.bit_generator.state = copy.deepcopy(boardToCopy.randomNextPosition.bit_generator.state)
+        return newone
 
     def calcularPuntuacion(self):
         """
