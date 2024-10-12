@@ -6,12 +6,18 @@ reglasProducción = [const.Movimiento.ABAJO,const.Movimiento.ARRIBA,const.Movimi
 
 import board as bd
 
-# Creamos un nodo con la estructura de Node pero con los atributos personalizados board, valor_F
+"""
+Creamos un nodo con la estructura de Node pero con los atributos personalizados:
+    board: Tablero con la situación actual de juego
+    movimiento: Movimiento que condujo del padre a ese estado de tablero
+    valor_heuristico: Por defecto cero para cuando no se utiliza, valor obtenido del cálculo de una función heurística sobre el nodo
+Esta clase contiene además un atributo valor_F, este valor será la suma de la profundidad a la que se encuentra nodo en el árbol + el valor heurístico proporcionado
+"""
 class MiNodo(Node):
-    def __init__(self, name, board, padre, movimiento):
+    def __init__(self, name, padre, board, movimiento, valor_heuristico=0):
         super().__init__(name, padre)
         self.board = board
-        self.valor_F = self.depth # El coste de la función para lo que llevo hasta ahora corresponde con la profundidad...
+        self.valor_F = self.depth + valor_heuristico # El coste de la función para lo que llevo hasta ahora corresponde con la profundidad + valor heurístico calculado
         self.movimiento = movimiento # Guardamos que movimiento desde el padre ha llevado a este estado
 
 # En este problema carecemos de estado objetivo, se juega hasta que la lista de abiertos esté vacia y luego nos quedamos con el mejor resultado
@@ -25,7 +31,7 @@ class Ai:
         # Estado inicial
         self.estadoInicial = board
         # Guardamos la raíz árbol de búsqueda
-        self.raiz = MiNodo(board.__hash__(), board=board,padre=None, movimiento=None)
+        self.raiz = MiNodo(board.__hash__(), board=board, padre=None, movimiento=None, valor_heuristico=0)
         # Guardamos el nodo ganador, inicialmente raíz
         self.nodo_ganador = self.raiz
 
@@ -47,7 +53,7 @@ class Ai:
         DotExporter(self.raiz).to_dotfile("arbol_busqueda.dot")
 
     # Añade a abiertos los nodos resultantes de la expansión del nodo "nodo_padre"
-    def calcularAbiertos(self,nodo_padre):
+    def calcularAbiertos(self, nodo_padre, funcion_heuristica=lambda x: 0):
         for i in range (len(reglasProducción)):
             # Obtenemos el tablero del nodo padre
             padre = nodo_padre.board
@@ -62,7 +68,7 @@ class Ai:
             #Si la regla ha sido aplicable y obtenemos tableros que no estén en cerrados ni abiertos (nodo nuevo)
             if nuevoTablero is not None and self.esNuevo(nuevoTablero):
                     # Añadimos información al arbol creando un nodoHijo y poniendo el puntero al nodo padre
-                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i])
+                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i]) # AQUÍ FALTA ASIGNAR VALOR HEURÍSTICO
 
                     # Mantenemos actualizado el estado con mejor puntuación
                     if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nuevoTablero):
@@ -97,6 +103,33 @@ class Ai:
         for estado in path:
             print(estado)
             print("\n")
+    
+    """
+    Devuelve el índice del nodo con valor_F mejor (según se le indique)
+        porMenorValorF: 
+            True si busca el nodo con menor valor_F,
+            False si busca el nodo con mayor valor_F
+        porAntiguedad: 
+            True si siempre se queda con el primer nodo que encuentra con mejor valor_F (el más antiguo)
+            False si siempre se queda con el último nodo que encuentra con mejor valor_F (el más nuevo)
+    """
+    def obtenerIndiceMejorValorF(self, porMenorValorF=True, porAntiguedad=True):
+        mejor_valor_F = self.abiertos[0].valor_F;
+        indice_mejor_nodo = 0;
+        
+        # Buscamos en toda la lista, sabiendo el índice, qué nodo tiene mejor valor_F
+        for index, nodo in enumerate(self.abiertos):
+            
+            # Caso normal en el que se encuentra un mejor valor_F
+            if((porMenorValorF and nodo.valor_F < mejor_valor_F) or (not porMenorValorF and nodo.valor_F > mejor_valor_F)):
+                mejor_valor_F = nodo.valor_F;
+                indice_mejor_nodo = index;
+                
+            # Caso especial en el que se encuentra un valor_F igual al que se tiene como mejor
+            elif(not porAntiguedad and nodo.valor_F == mejor_valor_F):
+                indice_mejor_nodo = index;
+            
+        return indice_mejor_nodo;    
 
     # Búsqueda en amplitud, tiene el parámetro opcional max_steps para regular el número de expansiones permitidos en la exploracion, si no acotamos, tardará mucho...
     def BFS(self,max_steps=100):
@@ -118,7 +151,7 @@ class Ai:
         # Mostramos resultados obtenidos
         self.mostrarResultado()
 
-    # Búsquedda en profundidad, tiene el parámetro opcional max_steps para regular el número de expansiones permitidos en la exploracion, si no acotamos, tardará mucho...
+    # Búsqueda en profundidad, tiene el parámetro opcional max_steps para regular el número de expansiones permitidos en la exploracion, si no acotamos, tardará mucho...
     def DFS(self,max_steps=100):
         # Calculamos nodos abiertos en la raíz
         self.calcularAbiertos(self.raiz)
@@ -137,6 +170,29 @@ class Ai:
 
         # Mostramos resultados obtenidos
         self.mostrarResultado()
+        
+    # Algoritmo A*, función heuristica por defecto h(n) = 0
+    def AStar(self, max_steps=100, funcion_heuristica=lambda x: 0):
+        # Calculamos nodos abiertos en la raíz
+        self.calcularAbiertos(self.raiz, funcion_heuristica=funcion_heuristica)
+        # La lista de nodos cerrados se inicializa a vacia en el propio constructor
+        step = 1
+        
+        while step <= max_steps:
+            # Obtenemos el índice del nodo abierto con menor valor_F (el más antiguo)
+            n_index = self.obtenerIndiceMejorValorF(); # Menor valor + Por Antigüedad
+            # Sacamos el nodo n de abiertos, sacamos siempre el que menor valor_F tiene
+            n = self.abiertos.pop(n_index)
+            # Añadimos nodo n a Cerrados
+            self.cerrados.append(n)
+            # Expandimos n obteniendo nuevos nodos en abiertos
+            self.calcularAbiertos(n, funcion_heuristica=funcion_heuristica)
+
+            #Avanzamos un paso de expansion
+            step += 1
+        
+        # Mostramos resultados obtenidos
+        self.mostrarResultado()
 
 board = bd.Board()
 ai = Ai(board)
@@ -146,4 +202,12 @@ print(ai.estadoInicial)
 
 ai.BFS()
 #ai.DFS()
+#ai.AStar()
 ai.mostrar_arbol()
+
+print("A*")
+ai2 = Ai(board)
+print("Estado inicial:")
+print(ai2.estadoInicial)
+ai2.AStar()
+ai2.mostrar_arbol()
