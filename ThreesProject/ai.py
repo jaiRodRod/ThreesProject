@@ -237,13 +237,19 @@ class Ai:
         
         # Mostramos resultados obtenidos
         self.mostrarResultado()
-        
-        
+    
 def FuncionHeuristica_CasillasVacias(board):
-    return board.huecos();
+    return board.huecos()
+        
+def manhattan(a, b, c, d):
+    return abs(a-c) + abs(b-d)
+
+def FuncionHeuristica_FichaMasAlta(board):
+    highestValue, X, Y = board.getHighestValue()
+    return -min(manhattan(X,Y,0,0),manhattan(X,Y,0,3),manhattan(X,Y,3,0),manhattan(X,Y,3,3))
 
 board = bd.Board()
-ai = Ai(board, funcion_heuristica=FuncionHeuristica_CasillasVacias)
+ai = Ai(board, funcion_heuristica=FuncionHeuristica_FichaMasAlta)
 
 print("Estado inicial:")
 print(ai.estadoInicial)

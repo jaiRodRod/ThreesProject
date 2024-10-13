@@ -92,6 +92,26 @@ class Board:
                     huecos += 1
         return huecos
 
+    def getHighestValue(self):
+        """
+        Esta función nos permite obtener la ficha con el valor más alto
+        de un tablero, junto a sus coordenadas i y j
+        Returns:
+            value: El valor int de la ficha más alta
+            indexI: La coordenada I de la ficha
+            indexJ: La coordenada J de la ficha
+        """
+        value = 0
+        indexI = 0
+        indexJ = 0
+        for i in range(0,4):
+            for j in range(0,4):
+                if (self.board[i,j] > value):
+                    value = self.board[i,j]
+                    indexI = i
+                    indexJ = j
+        return value, indexI, indexJ
+    
     def unionDisponible(self):
         """
         Es una condicion larga que comprueba si es posible
