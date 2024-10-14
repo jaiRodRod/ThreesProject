@@ -1,4 +1,5 @@
 import const
+import time
 from anytree import Node, RenderTree
 from anytree.exporter import DotExporter
 
@@ -136,9 +137,10 @@ class Ai:
     Mostrando por pantalla el estado con mejor puntución y el camino desde la raíz
     a ese estado.
     """
-    def mostrarResultado(self):
+    def mostrarResultado(self,tiempo_ejecucion,steps):
         print("\nEstado ganador:\n", self.nodo_ganador.board.board)
-        print("\nPath ganador:")
+        print(f"Con puntuación: {bd.Board.calcularPuntuacion(self.nodo_ganador.board)}, tiempo de ejecución {tiempo_ejecucion} segundos y se han expandido {steps-1} nodos")
+        print("\nSecuencia de movimientos:")
         path = self.encontrar_path(self.nodo_ganador)
         for estado in path:
             print(estado)
@@ -182,6 +184,7 @@ class Ai:
     por defecto tiene valor 100
     """
     def BFS(self,max_steps=100):
+        inicio = time.time()
         self.calcularAbiertos(self.raiz)
         step = 1
         while step<=max_steps:
@@ -190,8 +193,8 @@ class Ai:
             self.calcularAbiertos(n)
 
             step += 1
-
-        self.mostrarResultado()
+        fin = time.time()
+        self.mostrarResultado(fin-inicio,step)
 
     """
     Búsqueda en profundidad, calcula los abiertos de la raiz y va iterativamente
@@ -204,6 +207,7 @@ class Ai:
     por defecto tiene valor 100
     """
     def DFS(self,max_steps=100):
+        inicio = time.time()
         self.calcularAbiertos(self.raiz)
         step = 1
         while step <= max_steps:
@@ -213,10 +217,12 @@ class Ai:
 
             step += 1
 
-        self.mostrarResultado()
+        final = time.time()
+        self.mostrarResultado(final-inicio,step)
         
     # Algoritmo A*
     def AStar(self, max_steps=100):
+        inicio = time.time()
         # Calculamos nodos abiertos en la raíz
         self.calcularAbiertos(self.raiz)
         # La lista de nodos cerrados se inicializa a vacia en el propio constructor
@@ -234,9 +240,10 @@ class Ai:
 
             #Avanzamos un paso de expansion
             step += 1
-        
+
+        final = time.time()
         # Mostramos resultados obtenidos
-        self.mostrarResultado()
+        self.mostrarResultado(final-inicio,step)
     
 def FuncionHeuristica_CasillasVacias(board):
     return board.huecos()
@@ -256,7 +263,7 @@ print(ai.estadoInicial)
 
 #ai.BFS()
 #ai.DFS()
-ai.AStar()
+ai.AStar(10)
 ai.mostrar_arbol()
 
 
