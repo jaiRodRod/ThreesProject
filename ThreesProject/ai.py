@@ -16,10 +16,11 @@ class MiNodo(Node):
     :param valor_heuristico: Por defecto cero para cuando no se utiliza, valor obtenido del cálculo de una función heurística sobre el nodo
     :param valor_F: este valor será la suma de la profundidad a la que se encuentra nodo en el árbol (coste g(n)) + el valor heurístico proporcionado (h(n))
     """
-    def __init__(self, name, padre, board, movimiento, valor_heuristico=0):
+    def __init__(self, name, padre, board, movimiento, valor_heuristico=0, valor_coste=None):
         super().__init__(name, padre)
         self.board = board
-        self.valor_F = self.depth + valor_heuristico
+        if valor_coste == None: valor_coste = self.depth
+        self.valor_F = valor_coste + valor_heuristico
         self.movimiento = movimiento
 
 class Ai:
@@ -36,13 +37,15 @@ class Ai:
     :param funcion_heuristica: función heurística que se usará en el algoritmo de búsqueda
     por defecto es nula.
     """
-    def __init__(self, board, funcion_heuristica=lambda x: 0):
+    def __init__(self, board, funcion_heuristica=lambda x: 0, funcion_coste = None):
         self.abiertos = []
         self.cerrados = []
         self.estadoInicial = board
         self.raiz = MiNodo(board.__hash__(), board=board, padre=None, movimiento=None, valor_heuristico=funcion_heuristica(self.estadoInicial))
         self.nodo_ganador = self.raiz
         self.funcion_heuristica = funcion_heuristica
+        self.funcion_coste = None
+        if funcion_coste != None: self.funcion_coste = funcion_coste
 
     """
     Recorre el árbol desde el nodo ganador hasta la raíz guardando los tableros en una lista
@@ -86,13 +89,16 @@ class Ai:
         for i in range (len(reglasProducción)):
             padre = nodo_padre.board
             nuevoTablero = bd.Board.__copy__(padre)
+            resultado_coste = None
+            if ai.funcion_coste != None:
+                resultado_coste = ai.funcion_coste(nodo_padre.board)
 
             nuevoTablero.moverTablero(reglasProducción[i])
 
             if nuevoTablero and self.esNuevo(nuevoTablero):
                     resultado_heuristico = self.funcion_heuristica(nuevoTablero);
                 
-                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i], valor_heuristico=resultado_heuristico)
+                    nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i], valor_heuristico=resultado_heuristico, valor_coste=resultado_coste)
 
                     if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nuevoTablero):
                         self.nodo_ganador = nodoHijo
@@ -139,7 +145,7 @@ class Ai:
     """
     def mostrarResultado(self,tiempo_ejecucion,steps):
         print("\nEstado ganador:\n", self.nodo_ganador.board.board)
-        print(f"Con puntuación: {bd.Board.calcularPuntuacion(self.nodo_ganador.board)}, tiempo de ejecución {tiempo_ejecucion} segundos y se han expandido {steps-1} nodos")
+        print(f"Con puntuación: {bd.Board.calcularPuntuacion(self.nodo_ganador.board)}\nTiempo de ejecución {tiempo_ejecucion} segundos y se han expandido {steps-1} nodos")
         print("\nSecuencia de movimientos:")
         path = self.encontrar_path(self.nodo_ganador)
         for estado in path:
@@ -156,7 +162,7 @@ class Ai:
     :return: indice del nodo con mejor valor_F según criterio dado
     """
     def obtenerIndiceMejorValorF(self, porMenorValorF=True, porAntiguedad=True):
-        mejor_valor_F = self.abiertos[0].valor_F;
+        mejor_valor_F = self.abiertos[0].valor_F
         indice_mejor_nodo = 0;
         
         # Buscamos en toda la lista, sabiendo el índice, qué nodo tiene mejor valor_F
@@ -164,14 +170,14 @@ class Ai:
             
             # Caso normal en el que se encuentra un mejor valor_F
             if((porMenorValorF and nodo.valor_F < mejor_valor_F) or (not porMenorValorF and nodo.valor_F > mejor_valor_F)):
-                mejor_valor_F = nodo.valor_F;
-                indice_mejor_nodo = index;
+                mejor_valor_F = nodo.valor_F
+                indice_mejor_nodo = index
                 
             # Caso especial en el que se encuentra un valor_F igual al que se tiene como mejor
             elif(not porAntiguedad and nodo.valor_F == mejor_valor_F):
-                indice_mejor_nodo = index;
+                indice_mejor_nodo = index
             
-        return indice_mejor_nodo;    
+        return indice_mejor_nodo
 
     """
     Búsqueda en amplitud, calcula los abiertos de la raiz y va iterativamente
@@ -230,13 +236,15 @@ class Ai:
         
         while step <= max_steps:
             # Obtenemos el índice del nodo abierto con menor valor_F (el más antiguo)
-            n_index = self.obtenerIndiceMejorValorF(); # Menor valor + Por Antigüedad
+            n_index = self.obtenerIndiceMejorValorF() # Menor valor + Por Antigüedad
             # Sacamos el nodo n de abiertos, sacamos siempre el que menor valor_F tiene
             n = self.abiertos.pop(n_index)
             # Añadimos nodo n a Cerrados
             self.cerrados.append(n)
             # Expandimos n obteniendo nuevos nodos en abiertos
             self.calcularAbiertos(n)
+
+            print("Calculando: " + str(step))
 
             #Avanzamos un paso de expansion
             step += 1
@@ -255,16 +263,77 @@ def FuncionHeuristica_FichaMasAlta(board):
     highestValue, X, Y = board.getHighestValue()
     return -min(manhattan(X,Y,0,0),manhattan(X,Y,0,3),manhattan(X,Y,3,0),manhattan(X,Y,3,3))
 
-board = bd.Board()
-ai = Ai(board, funcion_heuristica=FuncionHeuristica_FichaMasAlta)
+def unionMasAltaDelTablero(board):
+    maxPair = 3
+    listValues = []
+    for i in range(0,4):
+        for j in range(0,4):
+            ficha = board.board[i][j]
+            if listValues.__contains__(ficha) and ficha*2 > maxPair:
+                maxPair = ficha*2
+            else: listValues.append(ficha)
+    return maxPair
+
+def estimadorMovimientosHastaUnion(board):
+    maxUnion = unionMasAltaDelTablero(board)
+    numeroMovimientos = 0
+    listFichas = []
+    distanciaMinima = 7
+    parejaMinima = []
+    if maxUnion == 3:
+        numeroMovimientos = 6
+    else:
+        for i in range(0,4):
+            for j in range(0,4):
+                ficha = board.board[i][j]
+                if(ficha == maxUnion/2):
+                    listFichas.append((i,j))
+        for i in range(0,listFichas.__len__()):
+            for j in range(i+1,listFichas.__len__()):
+                if manhattan(listFichas[i][0],listFichas[i][1],listFichas[j][0],listFichas[j][1]) < distanciaMinima:
+                    parejaMinima.clear()
+                    parejaMinima.append(listFichas[i])
+                    parejaMinima.append(listFichas[j])
+        if parejaMinima[0][0] == parejaMinima[1][0]:
+            if parejaMinima[0][1] == 0 or parejaMinima[0][1] == 3 or parejaMinima[1][1] == 0 or parejaMinima[1][1] == 3:
+                numeroMovimientos = manhattan(parejaMinima[0][0], parejaMinima[0][1], parejaMinima[1][0], parejaMinima[1][1])
+            else: numeroMovimientos = 2
+        elif parejaMinima[0][1] == parejaMinima[1][1]:
+            if parejaMinima[0][0] == 0 or parejaMinima[0][0] == 3 or parejaMinima[1][0] == 0 or parejaMinima[1][0] == 3:
+                numeroMovimientos = manhattan(parejaMinima[0][0], parejaMinima[0][1], parejaMinima[1][0], parejaMinima[1][1])
+            else: numeroMovimientos = 2
+        else:
+            numeroMovimientos = manhattan(parejaMinima[0][0], parejaMinima[0][1], parejaMinima[1][0], parejaMinima[1][1]) + min(
+                manhattan(parejaMinima[0][0], parejaMinima[0][1],0,0),manhattan(parejaMinima[0][0], parejaMinima[0][1],0,3),
+                manhattan(parejaMinima[0][0], parejaMinima[0][1],3,0),manhattan(parejaMinima[0][0], parejaMinima[0][1],3,3),
+                manhattan(parejaMinima[1][0], parejaMinima[1][1],0,0),manhattan(parejaMinima[1][0], parejaMinima[1][1],0,3),
+                manhattan(parejaMinima[1][0], parejaMinima[1][1],3,0),manhattan(parejaMinima[1][0], parejaMinima[1][1],3,3))
+    return numeroMovimientos
+
+def FuncionHeuristica_distanciaDeUnionPoderosa(board):
+    return estimadorMovimientosHastaUnion(board) * (98304/(unionMasAltaDelTablero(board)/2))
+
+def FuncionCoste_distanciaDeUnionPoderosa(board):
+    return 98304/unionMasAltaDelTablero(board)
+
+
+
+#board = bd.Board()
+seed_array = [0,0,0,3,0,0,2,0,0,1,0,0,3,0,0,0,10340203,45849032]
+board = bd.Board(seed_array)
+print(unionMasAltaDelTablero(board))
+print(estimadorMovimientosHastaUnion(board))
+#ai = Ai(board, funcion_heuristica=FuncionHeuristica_FichaMasAlta)
+#ai = Ai(board, funcion_heuristica=FuncionHeuristica_CasillasVacias)
+ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
 
 print("Estado inicial:")
 print(ai.estadoInicial)
 
 #ai.BFS()
 #ai.DFS()
-ai.AStar(10)
-ai.mostrar_arbol()
+ai.AStar(1000)
+#ai.mostrar_arbol()
 
 
 # print("A*")

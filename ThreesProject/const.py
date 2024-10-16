@@ -37,6 +37,20 @@ def PUNTOS(value):
         return 6561
     elif value == 768:
         return 19683
+    elif value == 1536:
+        return 59049
+    elif value == 3072:
+        return 177147
+    elif value == 6144:
+        return 531441
+    elif value == 12288:
+        return 1594323
+    elif value == 24576:
+        return 4782969
+    elif value == 49152:
+        return 14348907
+    elif value == 98304:
+        return 43046721
 
 #MOVIMIENTOS
 class Movimiento(Enum):
