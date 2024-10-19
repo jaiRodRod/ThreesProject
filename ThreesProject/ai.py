@@ -66,7 +66,7 @@ class Ai:
     """
     def mostrar_arbol(self):
         for pre, fill, node in RenderTree(self.raiz):
-            print(f"{pre}{node.name} (Puntuación: {node.board.calcularPuntuacion()})")
+            print(f"{pre}{node.name} | Valor_F {node.valor_F} (Puntuación: {node.board.calcularPuntuacion()})")
         DotExporter(self.raiz).to_dotfile("arbol_busqueda.dot")
 
     """
@@ -178,57 +178,125 @@ class Ai:
                 indice_mejor_nodo = index
             
         return indice_mejor_nodo
+    
+    """
+    Función recursiva para el algoritmo IDA*. Realiza búsqueda en profundidad limitada por F(n).
+    
+    :param nodo: nodo actual en la búsqueda
+    :param limite: límite de F(n) en la iteración actual
+    :param step: paso actual en la búsqueda
+    :param max_steps: número máximo de expansiones permitidas
+    :return: Si se encuentra solución, devuelve el nodo ganador; si no, devuelve el nuevo límite más bajo que supera el límite actual.
+    """
+    def IDAStar_Recursivo(self, nodo, limite, step, max_steps):
+    
+        # Si el valor F(n) del nodo actual excede el límite, devolvemos el valor F(n)
+        if nodo.valor_F > limite:
+            return None, nodo.valor_F
+        
+        # Si el nodo actual es el nodo ganador, devolvemos el nodo
+        if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nodo.board):
+            self.nodo_ganador = nodo
+        
+        # Inicializamos el siguiente límite como infinito
+        nuevo_limite = float('inf')
+        
+        # Expandimos el nodo actual
+        self.calcularAbiertos(nodo)
+        
+        # Recorremos los nodos hijos en la búsqueda
+        for hijo in self.abiertos:
+            # Llamamos recursivamente a IDAStar_recursivo con los nodos hijos
+            resultado, temp_limite = self.IDAStar_Recursivo(hijo, limite, step + 1, max_steps)
+            
+            # Si encontramos la solución, devolvemos el nodo
+            if resultado is not None:
+                return resultado, None
+            
+            # Actualizamos el nuevo límite si encontramos un valor F(n) menor
+            if temp_limite < nuevo_limite:
+                nuevo_limite = temp_limite
+
+            # Avanzamos un paso de expansión
+            step += 1
+        
+        # Si no encontramos la solución, devolvemos el nuevo límite más bajo que excede el actual
+        return None, nuevo_limite
 
     """
     Búsqueda en amplitud, calcula los abiertos de la raiz y va iterativamente
     sacando nodos de abiertos (antiguos primeros), metiendolos en cerrados y
     calculando los abiertos del nuevo nodo hasta que se de la condición de parada
     que puede ser que se alcance al máximo de expansiones permitidas o que no queden
-    más nodos por abrir (se acaba el propio juego). Tras finalizar siempre muestra resultados
+    más nodos por abrir (se acaba el propio juego). Tras finalizar siempre muestra resultados.
     
     :param max_steps: parámetro opcional para regular el número de expansiones permitidos en la exploracion
     por defecto tiene valor 100
     """
     def BFS(self,max_steps=100):
+        print("[ Algoritmo BFS ]")
         inicio = time.time()
+        
         self.calcularAbiertos(self.raiz)
         step = 1
+        
         while step<=max_steps:
             n = self.abiertos.pop(0)
+            
             self.cerrados.append(n)
+            
             self.calcularAbiertos(n)
-
+            
+            print("Calculando: " + str(step))
             step += 1
-        fin = time.time()
-        self.mostrarResultado(fin-inicio,step)
+            
+        final = time.time()
+        self.mostrarResultado(final-inicio,step)
 
     """
     Búsqueda en profundidad, calcula los abiertos de la raiz y va iterativamente
     sacando nodos de abiertos (nuevos primeros), metiendolos en cerrados y
     calculando los abiertos del nuevo nodo hasta que se de la condición de parada
     que puede ser que se alcance al máximo de expansiones permitidas o  que no queden
-    más nodos por abrir (se acaba el propio juego). Tras finalizar siempre muestra resultados
+    más nodos por abrir (se acaba el propio juego). Tras finalizar siempre muestra resultados.
 
     :param max_steps: parámetro opcional para regular el número de expansiones permitidos en la exploracion
     por defecto tiene valor 100
     """
     def DFS(self,max_steps=100):
+        print("[ Algoritmo DFS ]")
         inicio = time.time()
+        
         self.calcularAbiertos(self.raiz)
         step = 1
+        
         while step <= max_steps:
             n = self.abiertos.pop()
+            
             self.cerrados.append(n)
+            
             self.calcularAbiertos(n)
-
+            
+            print("Calculando: " + str(step))
             step += 1
 
         final = time.time()
         self.mostrarResultado(final-inicio,step)
         
-    # Algoritmo A*
+    """
+    Búsqueda A*, calcula los abiertos de la raiz y va iterativamente
+    sacando nodos de abiertos (el de mejor valor F, por defecto el menor), metiéndolos en cerrados y
+    calculando los abiertos del nuevo nodo hasta que se de la condición de parada
+    que puede ser que se alcance al máximo de expansiones permitidas o que no queden
+    más nodos por abrir (se acaba el propio juego). Tras finalizar siempre muestra resultados.
+
+    :param max_steps: parámetro opcional para regular el número de expansiones permitidos en la exploración
+    por defecto tiene valor 100
+    """
     def AStar(self, max_steps=100):
+        print("[ Algoritmo A* ]")
         inicio = time.time()
+        
         # Calculamos nodos abiertos en la raíz
         self.calcularAbiertos(self.raiz)
         # La lista de nodos cerrados se inicializa a vacia en el propio constructor
@@ -245,13 +313,86 @@ class Ai:
             self.calcularAbiertos(n)
 
             print("Calculando: " + str(step))
-
-            #Avanzamos un paso de expansion
             step += 1
 
         final = time.time()
         # Mostramos resultados obtenidos
         self.mostrarResultado(final-inicio,step)
+        
+    """
+    Búsqueda IDA* realiza una búsqueda iterativa en profundidad limitada
+    en cada iteración aumenta el límite de profundidad según el valor F(n) más bajo que 
+    sobrepasa el límite anterior. Se para cuando encuentra la solución o cuando no hay más nodos 
+    por expandir. 
+
+    :param max_steps: parámetro opcional para regular el número de expansiones permitidos en la exploración
+    por defecto tiene valor 100
+    """
+    def IDAStar(self, max_steps=100):
+        print("[ Algoritmo IDA* ]")
+        inicio = time.time()
+        
+        # La lista de nodos cerrados se inicializa a vacia en el propio constructor
+        step = 1
+        # Lista con todo el historial de cotas usadas
+        cotas = [] 
+        # Inicializar el límite como el valor F de la raíz
+        cotas.append(self.raiz.valor_F)
+        
+        while step <= max_steps:
+            print("Intento con cota: " + str(cotas[-1]))
+            
+            # Siempre se reinicia la lista de abiertos con solo de raíz
+            self.abiertos = [self.raiz]  
+            # Reiniciamos los nodos cerrados a ninguno
+            self.cerrados = []
+            # Mantiene el menor F que sobrepasa la cota, ponemos por defecto infinito para cuando entre el primer candidato
+            nueva_cota = float('inf')  
+
+            # El bucle termina si la pila se queda sin nodos
+            while self.abiertos:
+                
+                # Obtenemos el nodo más externo de la pila
+                nodo_actual = self.abiertos.pop()
+                #Guardamos temporalmente el nodo en cerrados 
+                self.cerrados.append(nodo_actual)
+                
+                # Si el nodo excede el límite actual de F, actualiza la nueva cota candidata que habrá próxima para cuando actualicemos la cota
+                if nodo_actual.valor_F > cotas[-1]:
+                    # Nos quedamos con el valorF que supere nuestra cota actual pero que sea de menor valor
+                    nueva_cota = min(nueva_cota, nodo_actual.valor_F)
+                    # Con esto saltamos esta iteración y así no expandimos este nodo ahora mismo
+                    continue 
+                
+                # Expandimos el nodo actual
+                self.calcularAbiertos(nodo_actual)
+                
+                print("Calculando: " + str(step))
+                step += 1
+                
+                # Si excedemos los pasos sale de este bucle para salir del otro también
+                if step > max_steps:
+                    break
+            
+            # Si encontramos la solución, salimos del bucle principal
+            if self.nodo_ganador:
+                break
+            
+            # Si no hemos encontrado solución, actualizamos el límite
+            cotas.append(nueva_cota)
+        
+            # Si no hay más nodos por expandir y el nuevo límite es infinito
+            if cotas[-1] == float('inf'):
+                print("No se ha encontrado solución.")
+                break
+            
+        final = time.time()
+        # Mostramos resultados obtenidos
+        self.mostrarResultado(final-inicio,step)
+        
+        
+
+# Heurísticos
     
 def FuncionHeuristica_CasillasVacias(board):
     return board.huecos()
@@ -317,12 +458,15 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
     return 98304/unionMasAltaDelTablero(board)
 
 
+# Ejecución
 
 #board = bd.Board()
 seed_array = [0,0,0,3,0,0,2,0,0,1,0,0,3,0,0,0,10340203,45849032]
 board = bd.Board(seed_array)
-print(unionMasAltaDelTablero(board))
-print(estimadorMovimientosHastaUnion(board))
+
+#print("Unión más Alta del tablero: " + str(unionMasAltaDelTablero(board)))
+#print("Estimador Movimientos hasta unión: " + str(estimadorMovimientosHastaUnion(board)))
+
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_FichaMasAlta)
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_CasillasVacias)
 ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
@@ -332,13 +476,6 @@ print(ai.estadoInicial)
 
 #ai.BFS()
 #ai.DFS()
-ai.AStar(1000)
-#ai.mostrar_arbol()
-
-
-# print("A*")
-# ai2 = Ai(board)
-# print("Estado inicial:")
-# print(ai2.estadoInicial)
-# ai2.AStar()
-# ai2.mostrar_arbol()
+#ai.AStar(1000)
+ai.IDAStar(2000)
+ai.mostrar_arbol()
