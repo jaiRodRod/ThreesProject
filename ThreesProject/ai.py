@@ -25,6 +25,7 @@ class MiNodo(Node):
 
 class Ai:
 
+
     """
     Este constructor inicializa el algoritmo de búsqueda dado un tablero,
     inicializa la lista de abiertos y cerrados como lístas vacías, guarda
@@ -60,6 +61,13 @@ class Ai:
             nodo_ganador = nodo_ganador.parent
         return path[::-1]
 
+    def encontrar_path_interfaz(self, nodo_ganador):
+        path = []
+        while nodo_ganador is not None:
+            path.append(nodo_ganador.movimiento)
+            nodo_ganador = nodo_ganador.parent
+        return path[::-1]
+
     """
     Muestra por consola el árbol de búsqueda obtenido tras desarrollar un algoritmo de búsqueda
     también importa este árbol en formato .dot
@@ -90,13 +98,13 @@ class Ai:
             padre = nodo_padre.board
             nuevoTablero = bd.Board.__copy__(padre)
             resultado_coste = None
-            if ai.funcion_coste != None:
-                resultado_coste = ai.funcion_coste(nodo_padre.board)
+            if self.funcion_coste != None:
+                resultado_coste = self.funcion_coste(nodo_padre.board)
 
             nuevoTablero.moverTablero(reglasProducción[i])
 
             if nuevoTablero and self.esNuevo(nuevoTablero):
-                    resultado_heuristico = self.funcion_heuristica(nuevoTablero);
+                    resultado_heuristico = self.funcion_heuristica(nuevoTablero)
                 
                     nodoHijo = MiNodo(nuevoTablero.__hash__(),board = nuevoTablero, padre=nodo_padre, movimiento=reglasProducción[i], valor_heuristico=resultado_heuristico, valor_coste=resultado_coste)
 
@@ -451,41 +459,44 @@ def estimadorMovimientosHastaUnion(board):
                 manhattan(parejaMinima[1][0], parejaMinima[1][1],3,0),manhattan(parejaMinima[1][0], parejaMinima[1][1],3,3))
     return numeroMovimientos
 
+maximoPlanteadoPuntuacionFicha = 98304
+#maximoPlanteadoPuntuacionFicha = 768
+
 def FuncionHeuristica_distanciaDeUnionPoderosa(board):
-    return estimadorMovimientosHastaUnion(board) * (98304/(unionMasAltaDelTablero(board)/2))
+    return estimadorMovimientosHastaUnion(board) * (maximoPlanteadoPuntuacionFicha/(unionMasAltaDelTablero(board)/2))
 
 def FuncionCoste_distanciaDeUnionPoderosa(board):
-    return 98304/unionMasAltaDelTablero(board)
+    return maximoPlanteadoPuntuacionFicha/unionMasAltaDelTablero(board)
 
 
 # Ejecución
 
 #board = bd.Board()
-seed_array = [0,0,0,3,0,0,2,0,0,1,0,0,3,0,0,0,10340203,45849032]
-board = bd.Board(seed_array)
+#seed_array = [0,0,0,3,0,0,2,0,0,1,0,0,3,0,0,0,10340203,45849032]
+#board = bd.Board(seed_array)
 
 #print("Unión más Alta del tablero: " + str(unionMasAltaDelTablero(board)))
 #print("Estimador Movimientos hasta unión: " + str(estimadorMovimientosHastaUnion(board)))
 
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_FichaMasAlta)
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_CasillasVacias)
-ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
+#ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
 
-print("Estado inicial:")
-print(ai.estadoInicial)
+#print("Estado inicial:")
+#print(ai.estadoInicial)
 
 #ai.BFS()
 #ai.DFS()
-ai.AStar(2000)
+#ai.AStar(1000)
 #ai.IDAStar(2000)
 #ai.mostrar_arbol()
 
 
 
-ai2 = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
+#ai2 = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
 
-print("Estado inicial:")
-print(ai2.estadoInicial)
+#print("Estado inicial:")
+#print(ai2.estadoInicial)
 
-ai2.IDAStar(2000)
+#ai2.IDAStar(2000)
 #ai2.mostrar_arbol()
