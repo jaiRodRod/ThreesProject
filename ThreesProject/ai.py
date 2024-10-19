@@ -476,6 +476,16 @@ print(ai.estadoInicial)
 
 #ai.BFS()
 #ai.DFS()
-#ai.AStar(1000)
-ai.IDAStar(2000)
-ai.mostrar_arbol()
+ai.AStar(2000)
+#ai.IDAStar(2000)
+#ai.mostrar_arbol()
+
+
+
+ai2 = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
+
+print("Estado inicial:")
+print(ai2.estadoInicial)
+
+ai2.IDAStar(2000)
+#ai2.mostrar_arbol()
