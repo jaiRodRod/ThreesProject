@@ -13,13 +13,14 @@ screen = pygame.display.set_mode((const.SCREEN_WIDTH, const.SCREEN_HEIGHT))
 # Iniciamos la clase board y automaticamente genera la matriz del tablero
 seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
 board = bd.Board(seed_array)
+#board = bd.Board()
 
 # Variable para capturar el número de nodos a explorar que será introducido por el usuario
 input_text = ""
 capturando_input = False
 modo = 0
 
-def draw_menu():
+def draw_menu(modo=modo):
     screen.fill(const.WHITE)
     font01 = pygame.font.SysFont(None, 50)
     text01 = font01.render("Jugar como humano (pulsa 1)", True, const.BLACK)
@@ -40,8 +41,13 @@ def draw_menu():
 
     # Mostrar el campo de entrada si está capturando el input
     if capturando_input:
+        seleccionado = ""
+        if modo == 2: seleccionado = "busqueda en amplitud"
+        elif modo == 3: seleccionado = "busqueda en profundidad"
+        elif modo == 4: seleccionado = "A*"
+        elif modo == 5: seleccionado = "IDA*"
         font_input = pygame.font.SysFont(None, 40)
-        input_prompt = font_input.render("Ingrese el número de nodos y presione Enter:", True, const.BLACK)
+        input_prompt = font_input.render("Has seleccionado " + seleccionado +" , ingrese el número de nodos y presione Enter:", True, const.BLACK)
         input_rect = input_prompt.get_rect(center=(600, 665))
         screen.blit(input_prompt, input_rect)
 
@@ -128,7 +134,16 @@ while running:
                         input_text = ""
                         # Llamamos a la IA seleccionada con el número de nodos a expandir introducido
                         inteligenciaArtificial = ai.Ai(board)
-                        inteligenciaArtificial.BFS(num_nodos)
+                        if modo == 2:
+                            inteligenciaArtificial.BFS(num_nodos)
+                        elif modo == 3:
+                            inteligenciaArtificial.DFS(num_nodos)
+                        elif modo == 4:
+                            inteligenciaArtificial = ai.Ai(board,funcion_heuristica=ai.FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=ai.FuncionCoste_distanciaDeUnionPoderosa)
+                            inteligenciaArtificial.AStar(num_nodos)
+                        elif modo == 5:
+                            inteligenciaArtificial = ai.Ai(board,funcion_heuristica=ai.FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=ai.FuncionCoste_distanciaDeUnionPoderosa)
+                            inteligenciaArtificial.IDAStar(num_nodos)
                         path = inteligenciaArtificial.encontrar_path_interfaz(inteligenciaArtificial.nodo_ganador)
                         for movimiento in path:
                             board.moverTablero(movimiento)
@@ -153,13 +168,23 @@ while running:
 
             # Manejamos los eventos para el modo menú
             elif modo == 0:
-                if event.key in [pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]:
+                if event.key == pygame.K_2:
                     # Si elige un algoritmo de IA, activamos el input de nodos a explorar
                     capturando_input = True
+                    modo = 2
+                elif event.key == pygame.K_3:
+                    capturando_input = True
+                    modo = 3
+                elif event.key == pygame.K_4:
+                    capturando_input = True
+                    modo = 4
+                elif event.key == pygame.K_5:
+                    capturando_input = True
+                    modo = 5
 
     # Dibujar el menú o la pantalla de juego
-    if modo == 0:
-        draw_menu()
+    if modo in [0,2,3,4,5]:
+        draw_menu(modo)
     elif modo == 1:
         if bd.Board.partidaPerdida(board):
             puntuacion = str(bd.Board.calcularPuntuacion(board))

@@ -344,8 +344,8 @@ class Ai:
         
         # La lista de nodos cerrados se inicializa a vacia en el propio constructor
         step = 1
-        # Lista con todo el historial de cotas usadas
-        cotas = [] 
+        # Lista con el historial de cotas usadas
+        cotas = []
         # Inicializar el límite como el valor F de la raíz
         cotas.append(self.raiz.valor_F)
         
@@ -474,15 +474,15 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
 # Ejecución
 
 #board = bd.Board()
-#seed_array = [0,0,0,3,0,0,2,0,0,1,0,0,3,0,0,0,10340203,45849032]
-#board = bd.Board(seed_array)
+seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
+board = bd.Board(seed_array)
 
 #print("Unión más Alta del tablero: " + str(unionMasAltaDelTablero(board)))
 #print("Estimador Movimientos hasta unión: " + str(estimadorMovimientosHastaUnion(board)))
 
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_FichaMasAlta)
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_CasillasVacias)
-#ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
+ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
 
 #print("Estado inicial:")
 #print(ai.estadoInicial)
@@ -490,7 +490,7 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
 #ai.BFS(1000)
 #ai.DFS(1000)
 #ai.AStar(1000)
-#ai.IDAStar(1000)
+ai.IDAStar(1000)
 #ai.mostrar_arbol()
 
 
