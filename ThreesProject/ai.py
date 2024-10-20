@@ -48,8 +48,8 @@ class Ai:
         self.nodo_ganador = self.raiz
         self.funcion_heuristica = funcion_heuristica
         self.funcion_coste = None
-        self.tiempo_ejecucion = None
         if funcion_coste != None: self.funcion_coste = funcion_coste
+        self.tiempo_ejecucion = None
 
     """
     Recorre el árbol desde el nodo ganador hasta la raíz guardando los tableros en una lista
@@ -119,11 +119,11 @@ class Ai:
     """
     Nos dice si un tablero es nuevo en el árbol de exploración
     comprobando que no esté en cerrados ni abiertos
-    :param tablero: tablero a comprbar
+    :param tablero: tablero a comprobar
     _return: True si es nuevo en la búsueda False en caso contrario
     """
     def esNuevo(self,tablero):
-        return not tablero in self.cerrados and not tablero in self.abiertos
+        return (not tablero in self.cerrados) and (not tablero in self.abiertos)
 
     """
     Muestra los resultados tras la aplicación de un algoritmo de búsqueda
@@ -165,50 +165,6 @@ class Ai:
                 indice_mejor_nodo = index
             
         return indice_mejor_nodo
-    
-    """
-    Función recursiva para el algoritmo IDA*. Realiza búsqueda en profundidad limitada por F(n).
-    
-    :param nodo: nodo actual en la búsqueda
-    :param limite: límite de F(n) en la iteración actual
-    :param step: paso actual en la búsqueda
-    :param max_steps: número máximo de expansiones permitidas
-    :return: Si se encuentra solución, devuelve el nodo ganador; si no, devuelve el nuevo límite más bajo que supera el límite actual.
-    """
-    def IDAStar_Recursivo(self, nodo, limite, step, max_steps):
-    
-        # Si el valor F(n) del nodo actual excede el límite, devolvemos el valor F(n)
-        if nodo.valor_F > limite:
-            return None, nodo.valor_F
-        
-        # Si el nodo actual es el nodo ganador, devolvemos el nodo
-        if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nodo.board):
-            self.nodo_ganador = nodo
-        
-        # Inicializamos el siguiente límite como infinito
-        nuevo_limite = float('inf')
-        
-        # Expandimos el nodo actual
-        self.calcularAbiertos(nodo)
-        
-        # Recorremos los nodos hijos en la búsqueda
-        for hijo in self.abiertos:
-            # Llamamos recursivamente a IDAStar_recursivo con los nodos hijos
-            resultado, temp_limite = self.IDAStar_Recursivo(hijo, limite, step + 1, max_steps)
-            
-            # Si encontramos la solución, devolvemos el nodo
-            if resultado is not None:
-                return resultado, None
-            
-            # Actualizamos el nuevo límite si encontramos un valor F(n) menor
-            if temp_limite < nuevo_limite:
-                nuevo_limite = temp_limite
-
-            # Avanzamos un paso de expansión
-            step += 1
-        
-        # Si no encontramos la solución, devolvemos el nuevo límite más bajo que excede el actual
-        return None, nuevo_limite
 
     """
     Búsqueda en amplitud, calcula los abiertos de la raiz y va iterativamente
@@ -337,7 +293,7 @@ class Ai:
             # Reiniciamos los nodos cerrados a ninguno
             self.cerrados = set()
             # Mantiene el menor F que sobrepasa la cota, ponemos por defecto infinito para cuando entre el primer candidato
-            nueva_cota = float('inf')  
+            nueva_cota = float('inf')
 
             # El bucle termina si la pila se queda sin nodos
             while self.abiertos:
@@ -363,18 +319,14 @@ class Ai:
                 # Si excedemos los pasos sale de este bucle para salir del otro también
                 if step > max_steps:
                     break
-            
-            # Si encontramos la solución, salimos del bucle principal
-            if self.nodo_ganador:
-                break
-            
+                        
             # Si no hemos encontrado solución, actualizamos el límite
             cotas.append(nueva_cota)
-        
-            # Si no hay más nodos por expandir y el nuevo límite es infinito
+            
             if cotas[-1] == float('inf'):
-                print("No se ha encontrado solución.")
+                print('Cota no actualizada, fin del algoritmo')
                 break
+
             
         final = time.time()
         self.tiempo_ejecucion = final-inicio
@@ -455,7 +407,11 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
 # Ejecución
 
 #board = bd.Board()
-seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
+seed_array = [1,0,0,0,
+              1,1,2,0,
+              0,0,1,1,
+              3,0,0,0,
+              10340203,45849032]
 board = bd.Board(seed_array)
 
 #print("Unión más Alta del tablero: " + str(unionMasAltaDelTablero(board)))
@@ -471,9 +427,8 @@ ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, fu
 #ai.BFS(1000)
 #ai.DFS(1000)
 #ai.AStar(1000)
-ai.IDAStar(1000)
+#ai.IDAStar(2000)
 #ai.mostrar_arbol()
-
 
 
 #ai2 = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
