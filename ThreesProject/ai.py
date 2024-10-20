@@ -445,7 +445,7 @@ board = bd.Board(seed_array)
 
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_FichaMasAlta)
 #ai = Ai(board, funcion_heuristica=FuncionHeuristica_CasillasVacias)
-ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
+#ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=FuncionCoste_distanciaDeUnionPoderosa)
 
 #print("Estado inicial:")
 #print(ai.estadoInicial)
@@ -454,7 +454,7 @@ ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, fu
 #ai.DFS(100)
 #ai.mostrar_arbol()
 #ai.AStar(1000)
-ai.IDAStar(10000)
+#ai.IDAStar(10000)
 #ai.mostrar_arbol()
 
 
