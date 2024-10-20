@@ -1,3 +1,5 @@
+from matplotlib.pyplot import table
+
 import const
 import time
 from anytree import Node, RenderTree
@@ -146,7 +148,8 @@ class Ai:
     _return: True si es nuevo en la búsueda False en caso contrario
     """
     def esNuevo(self,tablero):
-        return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
+        return not self.cerrados.__contains__(tablero) and not self.estaEnAbiertos(tablero)
+        #return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
 
     """
     Muestra los resultados tras la aplicación de un algoritmo de búsqueda
@@ -209,7 +212,7 @@ class Ai:
         while step<=max_steps:
             n = self.abiertos.pop(0)
             
-            self.cerrados.add(n)
+            self.cerrados.add(n.board)
             
             self.calcularAbiertos(n)
             
@@ -240,7 +243,7 @@ class Ai:
         while step <= max_steps:
             n = self.abiertos.pop()
             
-            self.cerrados.add(n)
+            self.cerrados.add(n.board)
             
             self.calcularAbiertos(n)
             
@@ -276,7 +279,7 @@ class Ai:
             # Sacamos el nodo n de abiertos, sacamos siempre el que menor valor_F tiene
             n = self.abiertos.pop(n_index)
             # Añadimos nodo n a Cerrados
-            self.cerrados.add(n)
+            self.cerrados.add(n.board)
             # Expandimos n obteniendo nuevos nodos en abiertos
             self.calcularAbiertos(n)
 
@@ -324,7 +327,7 @@ class Ai:
                 # Obtenemos el nodo más externo de la pila
                 nodo_actual = self.abiertos.pop()
                 #Guardamos temporalmente el nodo en cerrados 
-                self.cerrados.add(nodo_actual)
+                self.cerrados.add(nodo_actual.board)
                 
                 # Si el nodo excede el límite actual de F, actualiza la nueva cota candidata que habrá próxima para cuando actualicemos la cota
                 if nodo_actual.valor_F > cotas[-1]:
@@ -448,9 +451,10 @@ ai = Ai(board, funcion_heuristica=FuncionHeuristica_distanciaDeUnionPoderosa, fu
 #print(ai.estadoInicial)
 
 #ai.BFS(1000)
-#ai.DFS(1000)
+#ai.DFS(100)
+#ai.mostrar_arbol()
 #ai.AStar(1000)
-#ai.IDAStar(2000)
+ai.IDAStar(10000)
 #ai.mostrar_arbol()
 
 

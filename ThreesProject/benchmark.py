@@ -8,7 +8,7 @@ seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
 board = bd.Board(seed_array)
 
 # Lo suyo seria cambiar este a 100,1000,5000 y 10000 aunque ya cuando tengamos IDA* bien pq esto tarda en ejecutar...
-X = [100,1000]
+X = [100,1000,5000,10000]
 #Algoritmos Implementados
 algoritmos=['BFS','DFS','A*','IDA*']
 
@@ -32,27 +32,27 @@ def benchmark(IA,algoritmo):
         Yp.append(bd.Board.calcularPuntuacion(IA.nodo_ganador.board))
         Ym.append(len(IA.encontrar_path(IA.nodo_ganador)))
 
-    return Yt,Yp,Ym
+    plt.plot(X, Yt, label='Tiempo', marker='o', color='blue')  # Graficar Yt vs X
+    plt.plot(X, Yp, label='Puntuación', marker='s', color='red')  # Graficar Yp vs X
+    plt.plot(X, Ym, label='Movimientos', marker='^', color='green')  # Graficar Yp vs X
 
-fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+    # Etiquetas y título
+    plt.xlabel('Nodos Expandidos')
+    plt.ylabel('Tiempo, Puntuación y Movimientos')
+    plt.title(f'Tiempo, Puntuación y Movimientos del algoritmo: {algoritmo} ')
 
-# Graficamos el tiempo de ejecución la puntuación y los movimientos de juego de cada algoritmo implementado en un numero de expansiones permitidas:
-for idx,alg in enumerate(algoritmos):
-    IA = ai.Ai(board)
-    Yt, Yp,Ym = benchmark(IA, alg)
+    # Mostrar leyenda
+    plt.legend()
 
-    ax = axs[idx // 2, idx % 2]
+    # Mostrar grid
+    plt.grid(True)
 
-    ax.plot(X, Yt, label=f'{alg} - tiempo', marker='o', color='blue')
-    ax.plot(X, Yp, label=f'{alg} - puntuación', marker='s', color='red')
-    ax.plot(X, Ym, label=f'{alg} - movimientos', marker='^', color='green')
+    # Mostrar gráfico
+    plt.show()
 
-
-    ax.set_xlabel('Nodos Expandidos')
-    ax.set_ylabel('Tiempo, Puntuación y Pasos')
-    ax.set_title(f'Comparación {alg} vs nodos expandidos')
-    ax.legend()
-    ax.grid(True)
-
-plt.tight_layout()
-plt.show()
+#Graficar las 4 a la vez se vuelve un trabajo computacional muy grande y al final es lo mismo que ir una a una y guardar captura, por tanto ejecutar segun sea necesario:
+IA = ai.Ai(board)
+#benchmark(IA, "DFS")
+#benchmark(IA, "DFS")
+#benchmark(IA, "A*")
+benchmark(IA, "IDA*")
