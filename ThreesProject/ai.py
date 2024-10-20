@@ -297,10 +297,12 @@ class Ai:
     sobrepasa el límite anterior. Se para cuando encuentra la solución o cuando no hay más nodos 
     por expandir. 
 
-    :param max_steps: parámetro opcional para regular el número de expansiones permitidos en la exploración
+    :param max_steps: parámetro opcional para regular el número de expansiones permitidos en la exploración,
     por defecto tiene valor 100
+    :param max_steps_per_cota: parámetro opcional para regular el número de steps permitidos por cada cota que se utiliza para expandir,
+    por defecto tiene valor infinito
     """
-    def IDAStar(self, max_steps=100):
+    def IDAStar(self, max_steps=100, max_steps_per_cota=float('inf')):
         print("[ Algoritmo IDA* ]")
         inicio = time.time()
         
@@ -320,9 +322,11 @@ class Ai:
             self.cerrados = set()
             # Mantiene el menor F que sobrepasa la cota, ponemos por defecto infinito para cuando entre el primer candidato
             nueva_cota = float('inf')
+            # Pasos hechos con cierto valor de cota
+            cota_steps = 1
 
-            # El bucle termina si la pila se queda sin nodos
-            while self.abiertos:
+            # El bucle termina si la pila se queda sin nodos o se supera el máximo de steps por cota
+            while self.abiertos and cota_steps <= max_steps_per_cota:
                 
                 # Obtenemos el nodo más externo de la pila
                 nodo_actual = self.abiertos.pop()
@@ -341,6 +345,7 @@ class Ai:
                 
                 print("Calculando: " + str(step))
                 step += 1
+                cota_steps += 1
                 
                 # Si excedemos los pasos sale de este bucle para salir del otro también
                 if step > max_steps:
@@ -433,11 +438,11 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
 # Ejecución
 
 #board = bd.Board()
-seed_array = [1,0,0,0,
-              1,1,2,0,
-              0,0,1,1,
-              3,0,0,0,
-              10340203,45849032]
+seed_array = [1,2,0,0,
+              0,0,1,0,
+              0,0,2,1,
+              1,0,0,0,
+              10340203,45849032] 
 board = bd.Board(seed_array)
 
 #print("Unión más Alta del tablero: " + str(unionMasAltaDelTablero(board)))
@@ -454,7 +459,7 @@ board = bd.Board(seed_array)
 #ai.DFS(100)
 #ai.mostrar_arbol()
 #ai.AStar(1000)
-#ai.IDAStar(10000)
+#ai.IDAStar(10000,2500) # Probar esto, es interesante
 #ai.mostrar_arbol()
 
 
