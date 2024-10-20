@@ -1,7 +1,5 @@
 import time
-
 import pygame
-
 import ai
 import const
 import board as bd
@@ -13,14 +11,13 @@ pygame.init()
 screen = pygame.display.set_mode((const.SCREEN_WIDTH, const.SCREEN_HEIGHT))
 
 # Iniciamos la clase board y automaticamente genera la matriz del tablero
-#board = bd.Board()
-
-# Como se inicia una seed:
-# seed_array = [0,0,0,3,0,0,2,0,0,1,0,0,3,0,0,0,10340203,45849032]
-# board = bd.Board(seed_array)
-
 seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
 board = bd.Board(seed_array)
+
+# Variable para capturar el número de nodos a explorar que será introducido por el usuario
+input_text = ""
+capturando_input = False
+modo = 0
 
 def draw_menu():
     screen.fill(const.WHITE)
@@ -41,12 +38,22 @@ def draw_menu():
     screen.blit(text04, text_rect04)
     screen.blit(text05, text_rect05)
 
+    # Mostrar el campo de entrada si está capturando el input
+    if capturando_input:
+        font_input = pygame.font.SysFont(None, 40)
+        input_prompt = font_input.render("Ingrese el número de nodos y presione Enter:", True, const.BLACK)
+        input_rect = input_prompt.get_rect(center=(600, 665))
+        screen.blit(input_prompt, input_rect)
+
+        # Mostramos el texto que el usuario ha ingresado
+        user_input = font_input.render(input_text, True, const.BLACK)
+        input_text_rect = user_input.get_rect(center=(600, 715))
+        screen.blit(user_input, input_text_rect)
+
 def draw_screen():
     screen.fill(const.WHITE)
     font = pygame.font.SysFont(None, 50)
-    message_font = pygame.font.SysFont(None, 70, True)
 
-    # Proceso para pintar cada ficha
     for i in range(0, 4):
         for j in range(0, 4):
             value = board.board[i][j]
@@ -57,8 +64,6 @@ def draw_screen():
                 color = const.RED
             elif value > 2:
                 color = const.GREY
-            # A la hora de dibujar el rectangulo se hace primero la coordenada de
-            # la esquina superior izquierda y luego las dimensiones
             if value != 0:
                 pygame.draw.rect(screen, const.BLACK,
                                  (j * const.CELL_FULLSIZE + const.CELL_BORDER_PADDING,
@@ -74,11 +79,9 @@ def draw_screen():
                              , 0, 10)
             if value != 0:
                 text = font.render(str(value), True, const.BLACK)
-                text_rect = text.get_rect(center=(
-                j * const.CELL_FULLSIZE + const.CELL_FULLSIZE / 2, i * const.CELL_FULLSIZE + const.CELL_FULLSIZE / 2))
+                text_rect = text.get_rect(center=(j * const.CELL_FULLSIZE + const.CELL_FULLSIZE / 2, i * const.CELL_FULLSIZE + const.CELL_FULLSIZE / 2))
                 screen.blit(text, text_rect)
 
-    # Pintar la siguiente ficha
     text = font.render("Siguiente Ficha:", True, const.BLACK)
     text_rect = text.get_rect(center=(1000, 325))
     screen.blit(text, text_rect)
@@ -88,10 +91,7 @@ def draw_screen():
         color = const.BLUE
     elif value == 2:
         color = const.RED
-    pygame.draw.rect(screen, color,
-                     (950, 350, 100, 100)
-                     , 0, 10)
-
+    pygame.draw.rect(screen, color, (950, 350, 100, 100), 0, 10)
 
 def draw_screen_end(puntuacion):
     screen.fill(const.WHITE)
@@ -104,14 +104,11 @@ def draw_screen_end(puntuacion):
     screen.blit(text01, text_rect01)
     screen.blit(text02, text_rect02)
 
-
-# Hacemos el bucle que refresca la ventana
+# Bucle principal
 running = True
 partidaPerdida = False
-modo = 0
 
 while running:
-    # Captura los eventos que ocurren en cualquier modo
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -121,28 +118,46 @@ while running:
                 running = False
                 pygame.quit()
 
-            # Manejamos los eventos para el modo 0 (menú)
-            if modo == 0:
-                if event.key == pygame.K_1:
-                    modo = 1  # Cambiamos a modo 1
-                elif event.key == pygame.K_2:
-                    modo = 2  # Cambiamos a modo 2
+            # Si estamos capturando input del usuario
+            if capturando_input:
+                if event.key == pygame.K_RETURN:
+                    # Cuando el usuario presiona Enter, convierte el texto a entero
+                    if input_text.isdigit():
+                        num_nodos = int(input_text)
+                        capturando_input = False
+                        input_text = ""
+                        # Llamamos a la IA seleccionada con el número de nodos a expandir introducido
+                        inteligenciaArtificial = ai.Ai(board)
+                        inteligenciaArtificial.BFS(num_nodos)
+                        path = inteligenciaArtificial.encontrar_path_interfaz(inteligenciaArtificial.nodo_ganador)
+                        for movimiento in path:
+                            board.moverTablero(movimiento)
+                            draw_screen()
+                            pygame.display.update()
+                            time.sleep(1)
+                        # Esperamos 3 segundos por movimiento
+                        time.sleep(3)
+                        puntuacion = str(bd.Board.calcularPuntuacion(board))
+                        draw_screen_end(puntuacion)
+                        pygame.display.update()
+                        time.sleep(5)
+                        partidaPerdida = True
+                        running = False
+                elif event.key == pygame.K_BACKSPACE:
+                    # Elimina el último carácter si se presiona la tecla de retroceso
+                    input_text = input_text[:-1]
+                else:
+                    # Añade el número que se haya presionado (si es un dígito)
+                    if event.unicode.isdigit():
+                        input_text += event.unicode
 
-            # Manejamos los eventos para el modo 1 (juego)
-            elif modo == 1:
-                if not partidaPerdida:
-                    if event.key == pygame.K_LEFT:
-                        board.moverTablero(const.Movimiento.IZQUIERDA)
-                    elif event.key == pygame.K_RIGHT:
-                        board.moverTablero(const.Movimiento.DERECHA)
-                    elif event.key == pygame.K_UP:
-                        board.moverTablero(const.Movimiento.ARRIBA)
-                    elif event.key == pygame.K_DOWN:
-                        board.moverTablero(const.Movimiento.ABAJO)
+            # Manejamos los eventos para el modo menú
+            elif modo == 0:
+                if event.key in [pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]:
+                    # Si elige un algoritmo de IA, activamos el input de nodos a explorar
+                    capturando_input = True
 
-
-
-    # Dibuja la pantalla del modo correspondiente
+    # Dibujar el menú o la pantalla de juego
     if modo == 0:
         draw_menu()
     elif modo == 1:
@@ -152,23 +167,5 @@ while running:
             partidaPerdida = True
         else:
             draw_screen()
-    elif modo == 2:
-        inteligenciaArtificial = ai.Ai(board)
-        inteligenciaArtificial.BFS(1000)
-        path = inteligenciaArtificial.encontrar_path_interfaz(inteligenciaArtificial.nodo_ganador)
-        for movimiento in path:
-            board.moverTablero(movimiento)
-            draw_screen()
-            pygame.display.update()
-            time.sleep(1)
-        time.sleep(3)
-        puntuacion = str(bd.Board.calcularPuntuacion(board))
-        draw_screen_end(puntuacion)
-        pygame.display.update()
-        time.sleep(5)
-        partidaPerdida = True
-        running = False
 
-    # Actualizamos la pantalla en cada ciclo del while
     pygame.display.update()
-

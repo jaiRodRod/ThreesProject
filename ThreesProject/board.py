@@ -316,14 +316,22 @@ class Board:
     def obtenerEstado(self):
         return self.board
 
+    """
+    Devuelve el estado del tablero como una cadena
+    """
     def __str__(self):
-        # Devuelve el estado del tablero como una cadena
         return "\n".join(" ".join(str(int(cell)) for cell in row) for row in self.board)
 
+    """
+    Creamos el hash del objeto con sus atributos hasheables
+    """
     def __hash__(self):
-        # Generate a hash based only on hashable attributes
         return hash((self.board.tobytes(), self.siguienteFicha))
 
+    """
+    Calcula el equals entre dos tableros comparando el tablero y
+    siguienteFicha
+    """
     def __eq__(self, other):
         if not isinstance(other, Board):
             return False

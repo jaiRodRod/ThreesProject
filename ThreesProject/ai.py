@@ -11,10 +11,12 @@ class MiNodo(Node):
     """
     Creamos un nodo con la estructura de Node pero con atributos personalizados:
 
-    :param board Tablero con la situación actual de juego
+    :param name: Nombre del nodo
+    :param padre: Nodo padre del nuevo nodo
+    :param board: Tablero con la situación actual de juego
     :param movimiento: Movimiento que condujo del padre a ese estado de tablero
     :param valor_heuristico: Por defecto cero para cuando no se utiliza, valor obtenido del cálculo de una función heurística sobre el nodo
-    :param valor_F: este valor será la suma de la profundidad a la que se encuentra nodo en el árbol (coste g(n)) + el valor heurístico proporcionado (h(n))
+    :param valor_coste: valor de coste proporcionado g(n)
     """
     def __init__(self, name, padre, board, movimiento, valor_heuristico=0, valor_coste=None):
         super().__init__(name, padre)
