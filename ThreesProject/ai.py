@@ -42,12 +42,13 @@ class Ai:
     """
     def __init__(self, board, funcion_heuristica=lambda x: 0, funcion_coste = None):
         self.abiertos = []
-        self.cerrados = []
+        self.cerrados = set()
         self.estadoInicial = board
         self.raiz = MiNodo(board.__hash__(), board=board, padre=None, movimiento=None, valor_heuristico=funcion_heuristica(self.estadoInicial))
         self.nodo_ganador = self.raiz
         self.funcion_heuristica = funcion_heuristica
         self.funcion_coste = None
+        self.tiempo_ejecucion = None
         if funcion_coste != None: self.funcion_coste = funcion_coste
 
     """
@@ -115,30 +116,6 @@ class Ai:
 
                     self.abiertos.append(nodoHijo)
 
-    """ 
-    Comprueba usando equals si un tablero se encuentra en cerrados
-    
-    :param tablero: tablero a buscar en la lista de cerrados
-    :return: True si está en cerrados False en caso contrario
-    """
-    def estaEnCerrados(self, tablero):
-        for cerrado in self.cerrados:
-            if tablero.__eq__(cerrado.board):
-                return True
-        return False
-
-    """ 
-    Comprueba usando equals si un tablero se encuentra en abiertos
-
-    :param tablero: tablero a buscar en la lista de abiertos
-    :return: True si está en abiertos False en caso contrario
-    """
-    def estaEnAbiertos(self, tablero):
-        for abierto in self.abiertos:
-            if tablero.__eq__(abierto.board):
-                return True
-        return False
-
     """
     Nos dice si un tablero es nuevo en el árbol de exploración
     comprobando que no esté en cerrados ni abiertos
@@ -146,22 +123,22 @@ class Ai:
     _return: True si es nuevo en la búsueda False en caso contrario
     """
     def esNuevo(self,tablero):
-        return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
+        return not tablero in self.cerrados and not tablero in self.abiertos
 
     """
     Muestra los resultados tras la aplicación de un algoritmo de búsqueda
     Mostrando por pantalla el estado con mejor puntución y el camino desde la raíz
     a ese estado.
     """
-    def mostrarResultado(self,tiempo_ejecucion,steps):
+    def mostrarResultado(self,steps):
         print("\nEstado ganador:\n", self.nodo_ganador.board.board)
-        print(f"Con puntuación: {bd.Board.calcularPuntuacion(self.nodo_ganador.board)}\nTiempo de ejecución {tiempo_ejecucion} segundos y se han expandido {steps-1} nodos")
+        print(f"Con puntuación: {bd.Board.calcularPuntuacion(self.nodo_ganador.board)}\nTiempo de ejecución {self.tiempo_ejecucion} segundos y se han expandido {steps-1} nodos")
         print("\nSecuencia de movimientos:")
         path = self.encontrar_path(self.nodo_ganador)
         for estado in path:
             print(estado)
             print("\n")
-    
+
     """
     :param porMenorValorF: 
         True si busca el nodo con menor valor_F,
@@ -253,7 +230,7 @@ class Ai:
         while step<=max_steps:
             n = self.abiertos.pop(0)
             
-            self.cerrados.append(n)
+            self.cerrados.add(n)
             
             self.calcularAbiertos(n)
             
@@ -261,7 +238,8 @@ class Ai:
             step += 1
             
         final = time.time()
-        self.mostrarResultado(final-inicio,step)
+        self.tiempo_ejecucion = final-inicio
+        self.mostrarResultado(step)
 
     """
     Búsqueda en profundidad, calcula los abiertos de la raiz y va iterativamente
@@ -283,7 +261,7 @@ class Ai:
         while step <= max_steps:
             n = self.abiertos.pop()
             
-            self.cerrados.append(n)
+            self.cerrados.add(n)
             
             self.calcularAbiertos(n)
             
@@ -291,7 +269,8 @@ class Ai:
             step += 1
 
         final = time.time()
-        self.mostrarResultado(final-inicio,step)
+        self.tiempo_ejecucion = final-inicio
+        self.mostrarResultado(step)
         
     """
     Búsqueda A*, calcula los abiertos de la raiz y va iterativamente
@@ -318,7 +297,7 @@ class Ai:
             # Sacamos el nodo n de abiertos, sacamos siempre el que menor valor_F tiene
             n = self.abiertos.pop(n_index)
             # Añadimos nodo n a Cerrados
-            self.cerrados.append(n)
+            self.cerrados.add(n)
             # Expandimos n obteniendo nuevos nodos en abiertos
             self.calcularAbiertos(n)
 
@@ -326,8 +305,9 @@ class Ai:
             step += 1
 
         final = time.time()
+        self.tiempo_ejecucion = final-inicio
         # Mostramos resultados obtenidos
-        self.mostrarResultado(final-inicio,step)
+        self.mostrarResultado(step)
         
     """
     Búsqueda IDA* realiza una búsqueda iterativa en profundidad limitada
@@ -355,7 +335,7 @@ class Ai:
             # Siempre se reinicia la lista de abiertos con solo de raíz
             self.abiertos = [self.raiz]  
             # Reiniciamos los nodos cerrados a ninguno
-            self.cerrados = []
+            self.cerrados = set()
             # Mantiene el menor F que sobrepasa la cota, ponemos por defecto infinito para cuando entre el primer candidato
             nueva_cota = float('inf')  
 
@@ -365,7 +345,7 @@ class Ai:
                 # Obtenemos el nodo más externo de la pila
                 nodo_actual = self.abiertos.pop()
                 #Guardamos temporalmente el nodo en cerrados 
-                self.cerrados.append(nodo_actual)
+                self.cerrados.add(nodo_actual)
                 
                 # Si el nodo excede el límite actual de F, actualiza la nueva cota candidata que habrá próxima para cuando actualicemos la cota
                 if nodo_actual.valor_F > cotas[-1]:
@@ -397,8 +377,9 @@ class Ai:
                 break
             
         final = time.time()
+        self.tiempo_ejecucion = final-inicio
         # Mostramos resultados obtenidos
-        self.mostrarResultado(final-inicio,step)
+        self.mostrarResultado(step)
         
         
 
