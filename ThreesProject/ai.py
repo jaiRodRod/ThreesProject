@@ -116,14 +116,37 @@ class Ai:
 
                     self.abiertos.append(nodoHijo)
 
+    """ 
+    Comprueba usando equals si un tablero se encuentra en cerrados
+    
+    :param tablero: tablero a buscar en la lista de cerrados
+    :return: True si está en cerrados False en caso contrario
+    """
+    def estaEnCerrados(self, tablero):
+        for cerrado in self.cerrados:
+            if tablero.__eq__(cerrado.board):
+                return True
+        return False
+
+    """ 
+    Comprueba usando equals si un tablero se encuentra en abiertos
+    :param tablero: tablero a buscar en la lista de abiertos
+    :return: True si está en abiertos False en caso contrario
+    """
+    def estaEnAbiertos(self, tablero):
+        for abierto in self.abiertos:
+            if tablero.__eq__(abierto.board):
+                return True
+        return False
+
     """
     Nos dice si un tablero es nuevo en el árbol de exploración
     comprobando que no esté en cerrados ni abiertos
-    :param tablero: tablero a comprobar
+    :param tablero: tablero a comprbar
     _return: True si es nuevo en la búsueda False en caso contrario
     """
     def esNuevo(self,tablero):
-        return (not tablero in self.cerrados) and (not tablero in self.abiertos)
+        return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
 
     """
     Muestra los resultados tras la aplicación de un algoritmo de búsqueda
