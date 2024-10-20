@@ -92,7 +92,7 @@ class Board:
                     huecos += 1
         return huecos
 
-    def getHighestValue(self):
+    def valorMasAlto(self):
         """
         Esta función nos permite obtener la ficha con el valor más alto
         de un tablero, junto a sus coordenadas i y j

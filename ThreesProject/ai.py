@@ -409,7 +409,7 @@ def manhattan(a, b, c, d):
     return abs(a-c) + abs(b-d)
 
 def FuncionHeuristica_FichaMasAlta(board):
-    highestValue, X, Y = board.getHighestValue()
+    highestValue, X, Y = board.valorMasAlto()
     return -min(manhattan(X,Y,0,0),manhattan(X,Y,0,3),manhattan(X,Y,3,0),manhattan(X,Y,3,3))
 
 def unionMasAltaDelTablero(board):
@@ -485,10 +485,10 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
 #print("Estado inicial:")
 #print(ai.estadoInicial)
 
-#ai.BFS()
-#ai.DFS()
+#ai.BFS(1000)
+#ai.DFS(1000)
 #ai.AStar(1000)
-#ai.IDAStar(2000)
+#ai.IDAStar(1000)
 #ai.mostrar_arbol()
 
 
