@@ -11,9 +11,9 @@ pygame.init()
 screen = pygame.display.set_mode((const.SCREEN_WIDTH, const.SCREEN_HEIGHT))
 
 # Iniciamos la clase board y automaticamente genera la matriz del tablero
-seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
-board = bd.Board(seed_array)
-#board = bd.Board()
+#seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
+#board = bd.Board(seed_array)
+board = bd.Board()
 
 # Variable para capturar el número de nodos a explorar que será introducido por el usuario
 input_text = ""

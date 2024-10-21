@@ -384,7 +384,7 @@ def unionMasAltaDelTablero(board):
     for i in range(0,4):
         for j in range(0,4):
             ficha = board.board[i][j]
-            if listValues.__contains__(ficha) and ficha*2 > maxPair:
+            if ficha in listValues and ficha*2 > maxPair:
                 maxPair = ficha*2
             else: listValues.append(ficha)
     return maxPair
@@ -438,12 +438,14 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
 # Ejecución
 
 #board = bd.Board()
-seed_array = [1,2,0,0,
-              0,0,1,0,
-              0,0,2,1,
-              1,0,0,0,
-              10340203,45849032] 
-board = bd.Board(seed_array)
+#seed_array = [1,2,0,0,
+#              0,0,1,0,
+#              0,0,2,1,
+#              1,0,0,0,
+#              10340203,45849032]
+#seed_array = [192,48,2,0,12,24,1,0,0,0,1,0,0,0,0,0,10340203,45849032]
+#seed_array = [384,384,2,0,12,24,1,0,0,0,1,0,0,0,0,0,10340203,45849032]
+#board = bd.Board(seed_array)
 
 #print("Unión más Alta del tablero: " + str(unionMasAltaDelTablero(board)))
 #print("Estimador Movimientos hasta unión: " + str(estimadorMovimientosHastaUnion(board)))
@@ -456,10 +458,10 @@ board = bd.Board(seed_array)
 #print(ai.estadoInicial)
 
 #ai.BFS(1000)
-#ai.DFS(100)
+#ai.DFS(1000)
 #ai.mostrar_arbol()
 #ai.AStar(1000)
-#ai.IDAStar(10000,2500) # Probar esto, es interesante
+#ai.IDAStar(100000,2500) # Probar esto, es interesante
 #ai.mostrar_arbol()
 
 

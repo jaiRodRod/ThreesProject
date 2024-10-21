@@ -5,7 +5,7 @@ import const
 
 class Board:
 
-    board = np.zeros((4,4),np.dtype('uint8'))
+    board = np.zeros((4,4),np.dtype('uint32'))
     siguienteFicha = 0
     randomNextFicha = np.random.default_rng()
     randomNextPosition = np.random.default_rng()
