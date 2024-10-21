@@ -1,5 +1,6 @@
 import ai
 import board as bd
+import matplotlib.ticker as ticker
 
 import matplotlib.pyplot as plt
 
@@ -8,7 +9,7 @@ seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
 board = bd.Board(seed_array)
 
 # Lo suyo seria cambiar este a 100,1000,5000 y 10000 aunque ya cuando tengamos IDA* bien pq esto tarda en ejecutar...
-X = [100,1000,5000,10000]
+X = [100,200,300,500,700]
 #Algoritmos Implementados
 algoritmos=['BFS','DFS','A*','IDA*']
 
@@ -41,6 +42,10 @@ def benchmark(IA,algoritmo):
     plt.ylabel('Tiempo, Puntuación y Movimientos')
     plt.title(f'Tiempo, Puntuación y Movimientos del algoritmo: {algoritmo} ')
 
+    # Creamos ticks adaptativos en el eje Y usando MaxNLocator
+    ax = plt.gca()
+    ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=10))  # Cambiar n para modificar el número máximo de tics en el eje Y (un tick es un valor resaltado en el eje)
+
     # Mostrar leyenda
     plt.legend()
 
@@ -54,5 +59,5 @@ def benchmark(IA,algoritmo):
 IA = ai.Ai(board)
 #benchmark(IA, "DFS")
 #benchmark(IA, "DFS")
-#benchmark(IA, "A*")
-benchmark(IA, "IDA*")
+benchmark(IA, "A*")
+#benchmark(IA, "IDA*")
