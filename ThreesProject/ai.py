@@ -148,7 +148,7 @@ class Ai:
     _return: True si es nuevo en la búsueda False en caso contrario
     """
     def esNuevo(self,tablero):
-        return not self.cerrados.__contains__(tablero) and not self.estaEnAbiertos(tablero)
+        return (not tablero in self.cerrados) and (not self.estaEnAbiertos(tablero))
         #return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
 
     """
