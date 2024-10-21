@@ -301,8 +301,10 @@ class Ai:
     por defecto tiene valor 100
     :param max_steps_per_cota: parámetro opcional para regular el número de steps permitidos por cada cota que se utiliza para expandir,
     por defecto tiene valor infinito
+    :param keeps_looping_until_new_cota: parámetro opcional para regular si al usarse max_steps_per_cota el algoritmo puede seguir con la expansión de cierta cota aunque se supere max_steps_per_cota
+    hasta encontrar una nueva cota para evitar que el algoritmo deje de computar al no tener una siguiente que utilizar, por defecto tiene valor True
     """
-    def IDAStar(self, max_steps=100, max_steps_per_cota=float('inf')):
+    def IDAStar(self, max_steps=100, max_steps_per_cota=float('inf'), keeps_looping_until_new_cota=True):
         print("[ Algoritmo IDA* ]")
         inicio = time.time()
         
@@ -324,9 +326,9 @@ class Ai:
             nueva_cota = float('inf')
             # Pasos hechos con cierto valor de cota
             cota_steps = 1
-
-            # El bucle termina si la pila se queda sin nodos o se supera el máximo de steps por cota
-            while self.abiertos and cota_steps <= max_steps_per_cota:
+            
+            # El bucle termina si la pila se queda sin nodos 
+            while self.abiertos:
                 
                 # Obtenemos el nodo más externo de la pila
                 nodo_actual = self.abiertos.pop()
@@ -347,18 +349,25 @@ class Ai:
                 step += 1
                 cota_steps += 1
                 
+                # Superar el máximo de steps por cota hara salir de este bucle si se tiene nueva cota
+                if cota_steps <= max_steps_per_cota:
+                    # Si hay una nueva cota podrá salir del bucle (o si pusiste False el parámetro keeps_looping)
+                    if not keeps_looping_until_new_cota or nueva_cota != float('inf'):
+                        break
+                
                 # Si excedemos los pasos sale de este bucle para salir del otro también
                 if step > max_steps:
                     break
                         
             # Si no hemos encontrado solución, actualizamos el límite
-            cotas.append(nueva_cota)
+            if nueva_cota != float('inf'):
+                cotas.append(nueva_cota)
             
             if cotas[-1] == float('inf'):
                 print('Cota no actualizada, fin del algoritmo')
                 break
 
-            
+        print("Cotas utilizadas: " + str(cotas))
         final = time.time()
         self.tiempo_ejecucion = final-inicio
         # Mostramos resultados obtenidos
@@ -461,7 +470,7 @@ def FuncionCoste_distanciaDeUnionPoderosa(board):
 #ai.DFS(1000)
 #ai.mostrar_arbol()
 #ai.AStar(1000)
-#ai.IDAStar(100000,2500) # Probar esto, es interesante
+#ai.IDAStar(5000,2500)
 #ai.mostrar_arbol()
 
 

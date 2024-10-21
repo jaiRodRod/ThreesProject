@@ -47,7 +47,7 @@ def draw_menu(modo=modo):
         elif modo == 4: seleccionado = "A*"
         elif modo == 5: seleccionado = "IDA*"
         font_input = pygame.font.SysFont(None, 40)
-        input_prompt = font_input.render("Has seleccionado " + seleccionado +" , ingrese el número de nodos y presione Enter:", True, const.BLACK)
+        input_prompt = font_input.render("Has seleccionado " + seleccionado + ", ingrese el número de nodos y presione Enter:", True, const.BLACK)
         input_rect = input_prompt.get_rect(center=(600, 665))
         screen.blit(input_prompt, input_rect)
 
@@ -143,7 +143,7 @@ while running:
                             inteligenciaArtificial.AStar(num_nodos)
                         elif modo == 5:
                             inteligenciaArtificial = ai.Ai(board,funcion_heuristica=ai.FuncionHeuristica_distanciaDeUnionPoderosa, funcion_coste=ai.FuncionCoste_distanciaDeUnionPoderosa)
-                            inteligenciaArtificial.IDAStar(num_nodos)
+                            inteligenciaArtificial.IDAStar(num_nodos) #Se puede añadir segundo parámetro, por ejemplo poner num_nodos/4
                         path = inteligenciaArtificial.encontrar_path_interfaz(inteligenciaArtificial.nodo_ganador)
                         for movimiento in path:
                             board.moverTablero(movimiento)
