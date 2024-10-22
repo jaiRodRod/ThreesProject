@@ -9,7 +9,7 @@ seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
 board = bd.Board(seed_array)
 
 # Lista de nodos a expandir, cambiar según sea necesario para probar diferentes benchmarks
-X = [100,500,1000,1500,2000]
+X = [100,1000,5000,10000,20000,50000,100000]
 #Algoritmos Implementados
 algoritmos=['BFS','DFS','A*','IDA*']
 
@@ -19,15 +19,18 @@ def benchmark(algoritmo):
     Yp = []
     Ym = []
 
-    IA = ai.Ai(board)
+    IA = None
 
     for i in X:
+
         if algoritmo == 'BFS':
+            IA = ai.Ai(board)
             IA.BFS(i)
         elif algoritmo == 'DFS':
+            IA = ai.Ai(board)
             IA.DFS(i)
         elif algoritmo == 'A*':
-            IA = ai.Ai(board, funcion_heuristica=ai.FuncionHeuristica_FichaMasAlta)
+            IA = ai.Ai(board, funcion_heuristica=ai.FuncionCoste_distanciaDeUnionPoderosa,funcion_coste=ai.FuncionCoste_distanciaDeUnionPoderosa)
             IA.AStar(i)
         elif algoritmo == 'IDA*':
             IA = ai.Ai(board, funcion_heuristica=ai.FuncionHeuristica_distanciaDeUnionPoderosa,funcion_coste=ai.FuncionCoste_distanciaDeUnionPoderosa)
@@ -63,7 +66,7 @@ def benchmark(algoritmo):
     plt.show()
 
 #Graficar las 4 a la vez se vuelve un trabajo computacional muy grande y al final es lo mismo que ir una a una y guardar captura, por tanto ejecutar segun sea necesario:
-benchmark("BFS")
+#benchmark("BFS")
 #benchmark("DFS")
 #benchmark("A*")
-#benchmark("IDA*")
+benchmark("IDA*")

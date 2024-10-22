@@ -124,30 +124,6 @@ class Ai:
 
                     self.abiertos.put(nodoHijo)
                     self.abiertosSet.add(nodoHijo.board)
-                        
-
-    """ 
-    Comprueba usando equals si un tablero se encuentra en cerrados
-    
-    :param tablero: tablero a buscar en la lista de cerrados
-    :return: True si está en cerrados False en caso contrario
-    """
-    def estaEnCerrados(self, tablero):
-        for cerrado in self.cerrados:
-            if tablero.__eq__(cerrado.board):
-                return True
-        return False
-
-    """ 
-    Comprueba usando equals si un tablero se encuentra en abiertos
-    :param tablero: tablero a buscar en la lista de abiertos
-    :return: True si está en abiertos False en caso contrario
-    """
-    def estaEnAbiertos(self, tablero):
-        for abierto in self.abiertos:
-            if tablero.__eq__(abierto.board):
-                return True
-        return False
 
     """
     Nos dice si un tablero es nuevo en el árbol de exploración
@@ -157,9 +133,6 @@ class Ai:
     """
     def esNuevo(self,tablero):
         return (not tablero in self.cerrados) and (not tablero in self.abiertosSet)
-        #return (not tablero in self.cerrados) and (not self.estaEnAbiertos(tablero))
-        #return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
-        #Este segundo y tercer return es de cuando usabamos listas en abiertos y cerrados, se conserva por pruebas
 
     """
     Muestra los resultados tras la aplicación de un algoritmo de búsqueda
@@ -176,6 +149,7 @@ class Ai:
             print("\n")
 
     """
+    ESTO SE USABA EN LA IMPLEMENTACION DE ABIERTOS CON LISTAS, SE DEJA POR PRUEBAS
     :param porMenorValorF: 
         True si busca el nodo con menor valor_F,
         False si busca el nodo con mayor valor_F
@@ -318,21 +292,22 @@ class Ai:
     :param keeps_looping_until_new_cota: parámetro opcional para regular si al usarse max_steps_per_cota el algoritmo puede seguir con la expansión de cierta cota aunque se supere max_steps_per_cota
     hasta encontrar una nueva cota para evitar que el algoritmo deje de computar al no tener una siguiente que utilizar, por defecto tiene valor True
     """
+
     def IDAStar(self, max_steps=100, max_steps_per_cota=float('inf'), keeps_looping_until_new_cota=True):
         print("[ Algoritmo IDA* ]")
         inicio = time.time()
-        
+
         # La lista de nodos cerrados se inicializa a vacia en el propio constructor
         step = 1
         # Lista con el historial de cotas usadas
         cotas = []
         # Inicializar el límite como el valor F de la raíz
         cotas.append(self.raiz.valor_F)
-        
+
         while step <= max_steps:
             print("Intento con cota: " + str(cotas[-1]))
-            
-            # Siempre se reinicia la lista de abiertos con solo de raíz
+
+            # Siempre se reinicia la cola de abiertos con solo la raíz
             self.abiertos = queue.LifoQueue()
             self.abiertos.put(self.raiz)
             self.abiertosSet = set()
@@ -342,50 +317,53 @@ class Ai:
             nueva_cota = float('inf')
             # Pasos hechos con cierto valor de cota
             cota_steps = 1
-            
-            # El bucle termina si la pila se queda sin nodos 
-            while self.abiertos:
-                
-                # Obtenemos el nodo más externo de la pila
-                nodo_actual = self.abiertos.get()
-                #Guardamos temporalmente el nodo en cerrados 
+
+            # El bucle termina si la cola se queda sin nodos
+            while not self.abiertos.empty():
+                try:
+                    # Obtenemos el nodo más externo de la cola, sin bloquear si está vacía
+                    nodo_actual = self.abiertos.get_nowait()  # No bloquea si la cola está vacía
+                except queue.Empty:
+                    break
+
+                # Guardamos temporalmente el nodo en cerrados
                 self.cerrados.add(nodo_actual.board)
-                
-                # Si el nodo excede el límite actual de F, actualiza la nueva cota candidata que habrá próxima para cuando actualicemos la cota
+
+                # Si el nodo excede el límite actual de F, actualiza la nueva cota candidata para cuando actualicemos la cota
                 if nodo_actual.valor_F > cotas[-1]:
                     # Nos quedamos con el valorF que supere nuestra cota actual pero que sea de menor valor
                     nueva_cota = min(nueva_cota, nodo_actual.valor_F)
                     # Con esto saltamos esta iteración y así no expandimos este nodo ahora mismo
-                    continue 
-                
+                    continue
+
                 # Expandimos el nodo actual
                 self.calcularAbiertos(nodo_actual)
-                
+
                 print("Calculando: " + str(step))
                 step += 1
                 cota_steps += 1
-                
-                # Superar el máximo de steps por cota hara salir de este bucle si se tiene nueva cota
-                if cota_steps <= max_steps_per_cota:
+
+                # Superar el máximo de steps por cota hará salir de este bucle si se tiene nueva cota
+                if cota_steps > max_steps_per_cota:
                     # Si hay una nueva cota podrá salir del bucle (o si pusiste False el parámetro keeps_looping)
                     if not keeps_looping_until_new_cota or nueva_cota != float('inf'):
                         break
-                
+
                 # Si excedemos los pasos sale de este bucle para salir del otro también
                 if step > max_steps:
                     break
-                        
+
             # Si no hemos encontrado solución, actualizamos el límite
             if nueva_cota != float('inf'):
                 cotas.append(nueva_cota)
-            
+
             if cotas[-1] == float('inf'):
                 print('Cota no actualizada, fin del algoritmo')
                 break
 
         print("Cotas utilizadas: " + str(cotas))
         final = time.time()
-        self.tiempo_ejecucion = final-inicio
+        self.tiempo_ejecucion = final - inicio
         # Mostramos resultados obtenidos
         self.mostrarResultado(step)
         
@@ -451,7 +429,6 @@ def estimadorMovimientosHastaUnion(board):
     return numeroMovimientos
 
 maximoPlanteadoPuntuacionFicha = 98304
-#maximoPlanteadoPuntuacionFicha = 768
 
 def FuncionHeuristica_distanciaDeUnionPoderosa(board):
     return estimadorMovimientosHastaUnion(board) * (maximoPlanteadoPuntuacionFicha/(unionMasAltaDelTablero(board)/2))
