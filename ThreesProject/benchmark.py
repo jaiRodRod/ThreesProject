@@ -8,16 +8,18 @@ import matplotlib.pyplot as plt
 seed_array = [1,1,2,0,1,1,2,0,0,0,1,0,0,0,0,0,10340203,45849032]
 board = bd.Board(seed_array)
 
-# Lo suyo seria cambiar este a 100,1000,5000 y 10000 aunque ya cuando tengamos IDA* bien pq esto tarda en ejecutar...
-X = [100,200,300,500,700]
+# Lista de nodos a expandir, cambiar según sea necesario para probar diferentes benchmarks
+X = [100,500,1000,1500,2000]
 #Algoritmos Implementados
 algoritmos=['BFS','DFS','A*','IDA*']
 
-def benchmark(IA,algoritmo):
+def benchmark(algoritmo):
 
     Yt = []
     Yp = []
     Ym = []
+
+    IA = ai.Ai(board)
 
     for i in X:
         if algoritmo == 'BFS':
@@ -25,13 +27,18 @@ def benchmark(IA,algoritmo):
         elif algoritmo == 'DFS':
             IA.DFS(i)
         elif algoritmo == 'A*':
+            IA = ai.Ai(board, funcion_heuristica=ai.FuncionHeuristica_FichaMasAlta)
             IA.AStar(i)
         elif algoritmo == 'IDA*':
+            IA = ai.Ai(board, funcion_heuristica=ai.FuncionHeuristica_distanciaDeUnionPoderosa,funcion_coste=ai.FuncionCoste_distanciaDeUnionPoderosa)
             IA.IDAStar(i)
 
         Yt.append(IA.tiempo_ejecucion)
         Yp.append(bd.Board.calcularPuntuacion(IA.nodo_ganador.board))
         Ym.append(len(IA.encontrar_path(IA.nodo_ganador)))
+
+    for i in Yp:
+        print(i)
 
     plt.plot(X, Yt, label='Tiempo', marker='o', color='blue')  # Graficar Yt vs X
     plt.plot(X, Yp, label='Puntuación', marker='s', color='red')  # Graficar Yp vs X
@@ -56,8 +63,7 @@ def benchmark(IA,algoritmo):
     plt.show()
 
 #Graficar las 4 a la vez se vuelve un trabajo computacional muy grande y al final es lo mismo que ir una a una y guardar captura, por tanto ejecutar segun sea necesario:
-IA = ai.Ai(board)
-#benchmark(IA, "DFS")
-#benchmark(IA, "DFS")
-benchmark(IA, "A*")
-#benchmark(IA, "IDA*")
+benchmark("BFS")
+#benchmark("DFS")
+#benchmark("A*")
+#benchmark("IDA*")

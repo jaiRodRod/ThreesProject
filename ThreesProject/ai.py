@@ -150,6 +150,7 @@ class Ai:
     def esNuevo(self,tablero):
         return (not tablero in self.cerrados) and (not self.estaEnAbiertos(tablero))
         #return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
+        #Este segundo return es de cuando usabamos cerrados como lista, se mantiene por pruebas
 
     """
     Muestra los resultados tras la aplicación de un algoritmo de búsqueda
