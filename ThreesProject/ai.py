@@ -4,6 +4,7 @@ import const
 import time
 from anytree import Node, RenderTree
 from anytree.exporter import DotExporter
+import  queue
 
 reglasProducción = [const.Movimiento.ABAJO,const.Movimiento.ARRIBA,const.Movimiento.DERECHA,const.Movimiento.IZQUIERDA]
 
@@ -27,6 +28,10 @@ class MiNodo(Node):
         self.valor_F = valor_coste + valor_heuristico
         self.movimiento = movimiento
 
+    # Para cuando la cola de prioridad compare nodos
+    def __lt__(self, otro):
+        return self.valor_F < otro.valor_F
+
 class Ai:
 
 
@@ -43,7 +48,8 @@ class Ai:
     por defecto es nula.
     """
     def __init__(self, board, funcion_heuristica=lambda x: 0, funcion_coste = None):
-        self.abiertos = []
+        self.abiertos = None      
+        self.abiertosSet = set()                                                                                                                                                                                              
         self.cerrados = set()
         self.estadoInicial = board
         self.raiz = MiNodo(board.__hash__(), board=board, padre=None, movimiento=None, valor_heuristico=funcion_heuristica(self.estadoInicial))
@@ -116,7 +122,9 @@ class Ai:
                     if bd.Board.calcularPuntuacion(self.nodo_ganador.board) < bd.Board.calcularPuntuacion(nuevoTablero):
                         self.nodo_ganador = nodoHijo
 
-                    self.abiertos.append(nodoHijo)
+                    self.abiertos.put(nodoHijo)
+                    self.abiertosSet.add(nodoHijo.board)
+                        
 
     """ 
     Comprueba usando equals si un tablero se encuentra en cerrados
@@ -148,9 +156,10 @@ class Ai:
     _return: True si es nuevo en la búsueda False en caso contrario
     """
     def esNuevo(self,tablero):
-        return (not tablero in self.cerrados) and (not self.estaEnAbiertos(tablero))
+        return (not tablero in self.cerrados) and (not tablero in self.abiertosSet)
+        #return (not tablero in self.cerrados) and (not self.estaEnAbiertos(tablero))
         #return not self.estaEnCerrados(tablero) and not self.estaEnAbiertos(tablero)
-        #Este segundo return es de cuando usabamos cerrados como lista, se mantiene por pruebas
+        #Este segundo y tercer return es de cuando usabamos listas en abiertos y cerrados, se conserva por pruebas
 
     """
     Muestra los resultados tras la aplicación de un algoritmo de búsqueda
@@ -204,6 +213,7 @@ class Ai:
     por defecto tiene valor 100
     """
     def BFS(self,max_steps=100):
+        self.abiertos = queue.Queue()
         print("[ Algoritmo BFS ]")
         inicio = time.time()
         
@@ -211,7 +221,7 @@ class Ai:
         step = 1
         
         while step<=max_steps:
-            n = self.abiertos.pop(0)
+            n = self.abiertos.get()
             
             self.cerrados.add(n.board)
             
@@ -235,6 +245,7 @@ class Ai:
     por defecto tiene valor 100
     """
     def DFS(self,max_steps=100):
+        self.abiertos = queue.LifoQueue()
         print("[ Algoritmo DFS ]")
         inicio = time.time()
         
@@ -242,7 +253,7 @@ class Ai:
         step = 1
         
         while step <= max_steps:
-            n = self.abiertos.pop()
+            n = self.abiertos.get()
             
             self.cerrados.add(n.board)
             
@@ -266,6 +277,7 @@ class Ai:
     por defecto tiene valor 100
     """
     def AStar(self, max_steps=100):
+        self.abiertos = queue.PriorityQueue()
         print("[ Algoritmo A* ]")
         inicio = time.time()
         
@@ -276,10 +288,11 @@ class Ai:
         
         while step <= max_steps:
             # Obtenemos el índice del nodo abierto con menor valor_F (el más antiguo)
-            n_index = self.obtenerIndiceMejorValorF() # Menor valor + Por Antigüedad
+            #n_index = self.obtenerIndiceMejorValorF() # Menor valor + Por Antigüedad
             # Sacamos el nodo n de abiertos, sacamos siempre el que menor valor_F tiene
-            n = self.abiertos.pop(n_index)
-            # Añadimos nodo n a Cerrados
+            #n = self.abiertos.pop(n_index)
+            n = self.abiertos.get() # NUEVA IMPLEMENTACIÓN ahora al ser con cola de prioridad ya saca el valor de menor valor_f por defecto
+             # Añadimos nodo n a Cerrados
             self.cerrados.add(n.board)
             # Expandimos n obteniendo nuevos nodos en abiertos
             self.calcularAbiertos(n)
@@ -320,7 +333,9 @@ class Ai:
             print("Intento con cota: " + str(cotas[-1]))
             
             # Siempre se reinicia la lista de abiertos con solo de raíz
-            self.abiertos = [self.raiz]  
+            self.abiertos = queue.LifoQueue()
+            self.abiertos.put(self.raiz)
+            self.abiertosSet = set()
             # Reiniciamos los nodos cerrados a ninguno
             self.cerrados = set()
             # Mantiene el menor F que sobrepasa la cota, ponemos por defecto infinito para cuando entre el primer candidato
@@ -332,7 +347,7 @@ class Ai:
             while self.abiertos:
                 
                 # Obtenemos el nodo más externo de la pila
-                nodo_actual = self.abiertos.pop()
+                nodo_actual = self.abiertos.get()
                 #Guardamos temporalmente el nodo en cerrados 
                 self.cerrados.add(nodo_actual.board)
                 
